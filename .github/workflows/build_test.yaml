@@ -27,4 +27,4 @@ jobs:
           xcodebuild clean test \
             -project "BiangBiang Hanzi.xcodeproj" \
             -scheme "BiangBiang Hanzi" \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.0' \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.1' \
