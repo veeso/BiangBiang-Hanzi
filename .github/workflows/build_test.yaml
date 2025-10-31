@@ -13,18 +13,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Xcode
-        run: sudo xcode-select -switch /Applications/Xcode.app
-
-      - name: Build and test
-        run: |
-          xcodebuild clean test \
-            -project "BiangBiang Hanzi.xcodeproj" \
-            -scheme "BiangBiang Hanzi" \
-            -destination 'platform=iOS Simulator,name=iPhone 26,OS=17.0' \
+      - name: Set up Xcode (16.x)
+        run: sudo xcode-select -switch /Applications/Xcode_16.app || sudo xcode-select -switch /Applications/Xcode.app
 
       - name: Cache SwiftPM
         uses: actions/cache@v4
         with:
           path: ~/.swiftpm
           key: ${{ runner.os }}-swiftpm-${{ hashFiles('**/Package.resolved') }}
+
+      - name: Build and test
+        run: |
+          xcodebuild clean test \
+            -project "BiangBiang Hanzi.xcodeproj" \
+            -scheme "BiangBiang Hanzi" \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.0' \
