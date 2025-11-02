@@ -26,6 +26,7 @@ struct CameraModeView: View {
                             box.boundingBox,
                             in: geo.size
                         )
+
                         VStack(spacing: 1) {
                             Text(pinyin)
                                 .font(.system(size: 10, weight: .medium))
@@ -73,13 +74,11 @@ struct CameraModeView: View {
     }
 
     private func visionToViewRect(_ rect: CGRect, in size: CGSize) -> CGRect {
-        // Vision: (0,0) = bot left; SwiftUI: (0,0) = top-left
         let viewWidth = size.width
         let viewHeight = size.height
 
-        // Invert Y
         let x = rect.minX * viewWidth
-        let y = (1 - rect.maxY) * viewHeight
+        let y = rect.midY * viewHeight
         let width = rect.width * viewWidth
         let height = rect.height * viewHeight
 
