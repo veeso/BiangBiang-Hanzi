@@ -19,12 +19,18 @@ struct RecognizedTextBox: Identifiable {
 }
 
 @MainActor
-class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
+class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
+    AVCaptureVideoDataOutputSampleBufferDelegate
+{
     @Published var recognizedTexts: [RecognizedTextBox] = []
     @Published var pinyinMap: [UUID: String] = [:]
 
     let session = AVCaptureSession()
+    private let videoOutput = AVCaptureVideoDataOutput()
     private let output = AVCapturePhotoOutput()
+    private let queue = DispatchQueue(label: "camera.frame.processing")
+    private var textRequest: VNRecognizeTextRequest!
+    private var lastProcessingTime = Date.distantPast
 
     func capturePhoto() {
         output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
@@ -39,6 +45,64 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
             let image = UIImage(data: imageData)
         else { return }
         recognizeText(from: image)
+    }
+
+    func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        let now = Date()
+        guard now.timeIntervalSince(lastProcessingTime) > 1 else { return }
+        lastProcessingTime = now
+
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+        else { return }
+
+        let orientation: CGImagePropertyOrientation = .up
+
+        let request = VNRecognizeTextRequest { [weak self] req, _ in
+            guard let self,
+                let results = req.results as? [VNRecognizedTextObservation]
+            else { return }
+
+            let boxes: [RecognizedTextBox] = results.compactMap {
+                guard let top = $0.topCandidates(1).first else { return nil }
+                return RecognizedTextBox(
+                    text: top.string,
+                    boundingBox: $0.boundingBox
+                )
+            }
+
+            // Aggiorna UI sul main, identico alla tua funzione che già funziona
+            DispatchQueue.main.async {
+                self.recognizedTexts = boxes
+                self.pinyinMap.removeAll(keepingCapacity: true)
+                for box in boxes {
+                    if let hanzi = HanziExtractor().extract(text: box.text) {
+                        self.pinyinMap[box.id] = PinyinConverter()
+                            .hanziToPinyin(hanzi: hanzi)
+                    }
+                }
+            }
+        }
+        request.recognitionLanguages = ["zh-Hans", "zh-Hant"]
+        request.recognitionLevel = .accurate
+
+        // Handler per questo frame
+        let handler = VNImageRequestHandler(
+            cvPixelBuffer: pixelBuffer,
+            orientation: orientation,
+            options: [:]
+        )
+
+        // Esegui subito sulla queue del delegate (è già seriale), niente hop extra
+        do {
+            try handler.perform([request])
+        } catch {
+            print("⚠️ Vision error:", error)
+        }
+
     }
 
     private func recognizeText(from image: UIImage) {
@@ -112,6 +176,10 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         if session.canAddOutput(output) {
             session.addOutput(output)
         }
+        if session.canAddOutput(videoOutput) {
+            videoOutput.setSampleBufferDelegate(self, queue: queue)
+            session.addOutput(videoOutput)
+        }
     }
 
     // Start the session off the main thread
@@ -158,4 +226,35 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
             )
         }
     }
+
+    private func handleTextRecognition(request: VNRequest, error: Error?) {
+        guard let results = request.results as? [VNRecognizedTextObservation]
+        else { return }
+
+        DispatchQueue.main.async {
+            self.recognizedTexts = results.compactMap { obs in
+                guard let top = obs.topCandidates(1).first else { return nil }
+                return RecognizedTextBox(
+                    text: top.string,
+                    boundingBox: obs.boundingBox
+                )
+            }
+
+            // Conversione a pinyin
+            for box in self.recognizedTexts {
+                if let text = results.first(where: {
+                    $0.boundingBox == box.boundingBox
+                })?.topCandidates(1).first?.string {
+                    // Extract only Hanzi, then convert to Pinyin
+                    if let hanzi = HanziExtractor().extract(text: text) {
+                        self.pinyinMap[box.id] = PinyinConverter()
+                            .hanziToPinyin(hanzi: hanzi)
+                    } else {
+                        self.pinyinMap[box.id] = ""
+                    }
+                }
+            }
+        }
+    }
+
 }
