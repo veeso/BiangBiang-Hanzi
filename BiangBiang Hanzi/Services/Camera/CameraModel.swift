@@ -22,8 +22,14 @@ struct RecognizedTextBox: Identifiable {
 class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
     AVCaptureVideoDataOutputSampleBufferDelegate
 {
+    /// Recognised text by camera
     @Published var recognizedTexts: [RecognizedTextBox] = []
+    /// Map between the recognised text id and the pinyin for it
     @Published var pinyinMap: [UUID: String] = [:]
+    /// If the user captured an image, it will be saved here
+    @Published var capturedImage: UIImage? = nil
+    /// No camera permission
+    @Published var missingCameraPermission: Bool = false
 
     let session = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
@@ -105,30 +111,11 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
 
     }
 
-    private func recognizeText(from image: UIImage) {
-        guard let cgImage = image.cgImage else { return }
-        let request = VNRecognizeTextRequest { [weak self] req, _ in
-            guard let self,
-                let results = req.results as? [VNRecognizedTextObservation]
-            else { return }
-
-            let newTexts: [RecognizedTextBox] = results.compactMap {
-                guard let top = $0.topCandidates(1).first else { return nil }
-                return RecognizedTextBox(
-                    text: top.string,
-                    boundingBox: $0.boundingBox
-                )
-            }
-
-            Task { await self.handleRecognizedTexts(newTexts) }
-        }
-
-        request.recognitionLanguages = ["zh-Hans", "zh-Hant"]
-        request.recognitionLevel = .accurate
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        try? handler.perform([request])
-    }
-
+    /// Checks whether the user gave permission to camera.
+    ///
+    /// If given start the session.
+    ///
+    /// If not ask permission or return error.
     func checkPermissionsAndStart() async {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
@@ -137,13 +124,37 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
             let granted = await AVCaptureDevice.requestAccess(for: .video)
             if granted {
                 await configureAndStartSession()
+            } else {
+                await MainActor.run { self.missingCameraPermission = true }
             }
         case .denied, .restricted:
             print(
                 "⚠️ Camera permission denied. Enable them on Settings > Privacy > Camera"
             )
+            await MainActor.run { self.missingCameraPermission = true }
         @unknown default:
-            break
+            await MainActor.run { self.missingCameraPermission = true }
+        }
+    }
+
+    /// Delete the current captured image data.
+    func deleteCapturedImage() {
+        capturedImage = nil
+    }
+
+    // Optional: stop session off the main thread when needed
+    func stopSession() async {
+        await withCheckedContinuation { continuation in
+            Task.detached { [weak self] in
+                guard let self else {
+                    continuation.resume()
+                    return
+                }
+                if await self.session.isRunning {
+                    await self.session.stopRunning()
+                }
+                continuation.resume()
+            }
         }
     }
 
@@ -182,6 +193,30 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         }
     }
 
+    private func recognizeText(from image: UIImage) {
+        guard let cgImage = image.cgImage else { return }
+        let request = VNRecognizeTextRequest { [weak self] req, _ in
+            guard let self,
+                let results = req.results as? [VNRecognizedTextObservation]
+            else { return }
+
+            let newTexts: [RecognizedTextBox] = results.compactMap {
+                guard let top = $0.topCandidates(1).first else { return nil }
+                return RecognizedTextBox(
+                    text: top.string,
+                    boundingBox: $0.boundingBox
+                )
+            }
+
+            Task { await self.handleRecognizedTexts(newTexts) }
+        }
+
+        request.recognitionLanguages = ["zh-Hans", "zh-Hant"]
+        request.recognitionLevel = .accurate
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        try? handler.perform([request])
+    }
+
     // Start the session off the main thread
     private func startCaptureSession() async {
         await withCheckedContinuation { continuation in
@@ -192,22 +227,6 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
                 }
                 if await !self.session.isRunning {
                     await self.session.startRunning()
-                }
-                continuation.resume()
-            }
-        }
-    }
-
-    // Optional: stop session off the main thread when needed
-    func stopSession() async {
-        await withCheckedContinuation { continuation in
-            Task.detached { [weak self] in
-                guard let self else {
-                    continuation.resume()
-                    return
-                }
-                if await self.session.isRunning {
-                    await self.session.stopRunning()
                 }
                 continuation.resume()
             }
