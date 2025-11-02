@@ -14,31 +14,38 @@ struct CameraModeView: View {
     @StateObject private var cameraModel = CameraModel()
 
     var body: some View {
-        VStack(spacing: 0) {
+        GeometryReader { geo in
             ZStack {
                 CameraPreview(session: cameraModel.session)
                     .ignoresSafeArea()
 
                 // Recognized text
-                VStack(spacing: 4) {
-                    if !cameraModel.pinyinText.isEmpty {
-                        Text(cameraModel.pinyinText)
-                            .font(.title2)
-                            .bold()
-                            .foregroundColor(.red)
-                            .shadow(radius: 2)
-                    }
-                    if !cameraModel.recognizedText.isEmpty {
-                        Text(cameraModel.recognizedText)
-                            .font(.largeTitle)
-                            .foregroundColor(.white)
-                            .shadow(radius: 2)
+                ForEach(cameraModel.recognizedTexts) { box in
+                    if let pinyin = cameraModel.pinyinMap[box.id] {
+                        let frame = visionToViewRect(
+                            box.boundingBox,
+                            in: geo.size
+                        )
+                        VStack(spacing: 1) {
+                            Text(pinyin)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.black)
+
+                        }
+                        .padding(4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.white.opacity(0.9))
+                                .shadow(
+                                    color: .black.opacity(0.2),
+                                    radius: 1,
+                                    x: 0,
+                                    y: 1
+                                )
+                        )
+                        .position(x: frame.minX, y: frame.minY)
                     }
                 }
-                .padding()
-                .background(Color.black.opacity(0.3))
-                .cornerRadius(12)
-                .padding(.top, 80)
 
                 Spacer()
                 VStack {
@@ -64,6 +71,21 @@ struct CameraModeView: View {
             await cameraModel.checkPermissionsAndStart()
         }
     }
+
+    private func visionToViewRect(_ rect: CGRect, in size: CGSize) -> CGRect {
+        // Vision: (0,0) = bot left; SwiftUI: (0,0) = top-left
+        let viewWidth = size.width
+        let viewHeight = size.height
+
+        // Invert Y
+        let x = rect.minX * viewWidth
+        let y = (1 - rect.maxY) * viewHeight
+        let width = rect.width * viewWidth
+        let height = rect.height * viewHeight
+
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+
 }
 
 #Preview {
