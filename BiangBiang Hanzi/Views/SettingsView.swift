@@ -37,8 +37,8 @@ struct SettingsView: View {
                         .font(.headline)
                 }) {
                     Picker("Variant", selection: $settings.chineseVariant) {
-                        Text("Simplified").tag("simplified")
-                        Text("Traditional").tag("traditional")
+                        Text("Simplified").tag("zh-Hans")
+                        Text("Traditional").tag("zh-Hant")
                     }
                     .pickerStyle(SegmentedPickerStyle())
                 }

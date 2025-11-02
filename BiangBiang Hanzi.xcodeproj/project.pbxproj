@@ -29,22 +29,9 @@
 		6C3AA81C2EB510C70073DF5D /* BiangBiang HanziUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BiangBiang HanziUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		6C5625392EB75D4C002E1EBA /* Exceptions for "BiangBiang Hanzi" folder in "BiangBiang Hanzi" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"BiangBiang-Hanzi-Info.plist",
-			);
-			target = 6C3AA8042EB510C60073DF5D /* BiangBiang Hanzi */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6C3AA8072EB510C60073DF5D /* BiangBiang Hanzi */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				6C5625392EB75D4C002E1EBA /* Exceptions for "BiangBiang Hanzi" folder in "BiangBiang Hanzi" target */,
-			);
 			path = "BiangBiang Hanzi";
 			sourceTree = "<group>";
 		};

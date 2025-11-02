@@ -21,7 +21,7 @@ final class AppSettings: ObservableObject {
     init(
         userDefaults: UserDefaults = .standard,
         defaultLanguage: String = Locale.current.language.languageCode?.identifier ?? "en",
-        defaultChineseVariant: String = "simplified"
+        defaultChineseVariant: String = "zh-Hans"
     ) {
         userLanguage = userDefaults.string(forKey: "user_language") ?? defaultLanguage
         chineseVariant = userDefaults.string(forKey: "chinese") ?? defaultChineseVariant
