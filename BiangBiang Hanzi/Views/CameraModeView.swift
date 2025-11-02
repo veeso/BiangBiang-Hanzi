@@ -65,9 +65,11 @@ struct CameraModeView: View {
                     // Recognized text
                     ForEach(cameraModel.recognizedTexts) { box in
                         if let pinyin = cameraModel.pinyinMap[box.id] {
+                            let text =
+                                cameraModel.showPinyin ? pinyin : box.text
                             TextOverlay(
                                 cameraModel: cameraModel,
-                                pinyin: pinyin,
+                                text: text,
                                 boundingBox: box,
                                 viewSize: geo.size
                             )
@@ -107,6 +109,34 @@ struct CameraModeView: View {
                                         )
                                         .accessibilityLabel("Take photo")
                                 }
+                                // Toggle Hanzi/Pinyin
+                                Button(action: {
+                                    cameraModel.showPinyin.toggle()
+                                }) {
+                                    Image(
+                                        "BiangBiang"
+                                    )
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 28, height: 28)
+                                    .font(.system(size: 24, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(
+                                        Circle()
+                                            .fill(
+                                                cameraModel.showPinyin
+                                                    ? .red.opacity(0.8)
+                                                    : .gray.opacity(0.8)
+                                            )
+                                            .shadow(radius: 4)
+                                    )
+                                    .animation(
+                                        .easeInOut(duration: 0.2),
+                                        value: cameraModel.showPinyin
+                                    )
+                                    .accessibilityLabel("Toggle Pinyin")
+                                }
                             }
                         }
                         .padding(.bottom, 40)
@@ -119,36 +149,36 @@ struct CameraModeView: View {
 
         private struct TextOverlay: View {
             @ObservedObject var cameraModel: CameraModel
-            let pinyin: String
+            let text: String
             let boundingBox: RecognizedTextBox
             let viewSize: CGSize
 
             var body: some View {
-                if let pinyin = cameraModel.pinyinMap[boundingBox.id] {
-                    let frame = visionToViewRect(
-                        boundingBox.boundingBox,
-                        in: viewSize
-                    )
+                let frame = visionToViewRect(
+                    boundingBox.boundingBox,
+                    in: viewSize
+                )
 
-                    VStack(spacing: 1) {
-                        Text(pinyin)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.black)
+                VStack(spacing: 1) {
+                    Text(text)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.black)
 
-                    }
-                    .padding(4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.white.opacity(0.9))
-                            .shadow(
-                                color: .black.opacity(0.2),
-                                radius: 1,
-                                x: 0,
-                                y: 1
-                            )
-                    )
-                    .position(x: frame.minX, y: frame.minY)
                 }
+                .textSelection(.enabled)
+                .padding(4)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.white.opacity(0.9))
+                        .shadow(
+                            color: .black.opacity(0.2),
+                            radius: 1,
+                            x: 0,
+                            y: 1
+                        )
+                )
+                .position(x: frame.minX, y: frame.minY)
+
             }
 
             private func visionToViewRect(_ rect: CGRect, in size: CGSize)
