@@ -8,7 +8,6 @@
 import XCTest
 
 final class BiangBiang_HanziUITestsLaunchTests: XCTestCase {
-
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }
