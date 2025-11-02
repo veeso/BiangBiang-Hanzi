@@ -50,8 +50,17 @@ struct CameraModeView: View {
         var body: some View {
             GeometryReader { geo in
                 ZStack {
+                    // 🎥 show live camera (always)
                     CameraPreview(session: cameraModel.session)
                         .ignoresSafeArea()
+
+                    if let image = cameraModel.capturedImage {
+                        // 📸 show taken photo
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .ignoresSafeArea()
+                    }
 
                     // Recognized text
                     ForEach(cameraModel.recognizedTexts) { box in
@@ -68,8 +77,13 @@ struct CameraModeView: View {
                     VStack {
                         Spacer()
                         HStack {
-                            Button(action: cameraModel.capturePhoto) {
-                                Image(systemName: "camera.fill")
+                            if cameraModel.capturedImage != nil {
+                                Button(action: cameraModel.deleteCapturedImage)
+                                {
+                                    Image(
+                                        systemName:
+                                            "arrow.uturn.backward.circle.fill"
+                                    )
                                     .font(.system(size: 24))
                                     .foregroundColor(.white)
                                     .padding()
@@ -78,7 +92,21 @@ struct CameraModeView: View {
                                             .fill(.gray)
                                             .shadow(radius: 4)
                                     )
-
+                                    .accessibilityLabel("Retake photo")
+                                }
+                            } else {
+                                Button(action: cameraModel.capturePhoto) {
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(
+                                            Circle()
+                                                .fill(.gray)
+                                                .shadow(radius: 4)
+                                        )
+                                        .accessibilityLabel("Take photo")
+                                }
                             }
                         }
                         .padding(.bottom, 40)

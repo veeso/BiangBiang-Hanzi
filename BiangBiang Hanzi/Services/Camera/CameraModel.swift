@@ -47,10 +47,18 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
+        // called after taking photo
         guard let imageData = photo.fileDataRepresentation(),
             let image = UIImage(data: imageData)
         else { return }
-        recognizeText(from: image)
+        Task { @MainActor in
+            // save image
+            self.capturedImage = image
+            // stop live feed
+            //self.session.stopRunning()
+            // get text from image
+            self.recognizeText(from: image)
+        }
     }
 
     func captureOutput(
@@ -58,6 +66,9 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
+        // do not capture if image is set underneath.
+        if self.capturedImage != nil { return }
+
         let now = Date()
         guard now.timeIntervalSince(lastProcessingTime) > 1 else { return }
         lastProcessingTime = now
@@ -139,7 +150,10 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
 
     /// Delete the current captured image data.
     func deleteCapturedImage() {
-        capturedImage = nil
+        Task { @MainActor in
+            // reset image
+            self.capturedImage = nil
+        }
     }
 
     // Optional: stop session off the main thread when needed
