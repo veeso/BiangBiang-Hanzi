@@ -30,7 +30,6 @@ struct TextModeView: View {
                     Text("BiangBiang Hanzi")
                         .font(.title)
                         .fontWeight(.semibold)
-                        .foregroundColor(.black)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, 16)
@@ -38,7 +37,6 @@ struct TextModeView: View {
                 HStack(spacing: 8) {
                     Text("Convert Hanzi to Pinyin")
                         .font(.title2)
-                        .foregroundColor(.black)
                 }
                 .padding(.vertical, 4)
 

@@ -16,7 +16,7 @@ I developed this app to help myself and others learn Chinese more effectively by
 - [x] Translate Chinese to any language
 - [x] Support for traditional and simplified Chinese characters
 - [x] OCR support for images (both live and from camera)
-- [ ] OCR support from files (coming soon)
+- [x] OCR support from files (coming soon)
 - [ ] Cantonese support (coming soon)
 
 ## Download

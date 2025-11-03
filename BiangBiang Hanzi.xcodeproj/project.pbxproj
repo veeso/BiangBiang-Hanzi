@@ -404,7 +404,8 @@
 				INFOPLIST_FILE = "BiangBiang-Hanzi-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "BiangBiang Hanzi";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app require the camera to read Hanzi characters";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires the camera to read Hanzi characters";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow BiangBiang Hanzi to access your photo library to scan Hanzi from pictures.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -441,7 +442,8 @@
 				INFOPLIST_FILE = "BiangBiang-Hanzi-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "BiangBiang Hanzi";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app require the camera to read Hanzi characters";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires the camera to read Hanzi characters";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow BiangBiang Hanzi to access your photo library to scan Hanzi from pictures.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

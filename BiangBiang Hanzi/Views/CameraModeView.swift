@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import PhotosUI
 import SwiftUI
 import Vision
 
@@ -46,6 +47,7 @@ struct CameraModeView: View {
 
     private struct CameraLiveView: View {
         @ObservedObject var cameraModel: CameraModel
+        @State private var selectedItem: PhotosPickerItem?
 
         var body: some View {
             GeometryReader { geo in
@@ -58,7 +60,9 @@ struct CameraModeView: View {
                         // 📸 show taken photo
                         Image(uiImage: image)
                             .resizable()
-                            .scaledToFill()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color.black)
                             .ignoresSafeArea()
                     }
 
@@ -136,6 +140,44 @@ struct CameraModeView: View {
                                         value: cameraModel.showPinyin
                                     )
                                     .accessibilityLabel("Toggle Pinyin")
+                                }
+                                // Photo picker button
+                                PhotosPicker(
+                                    selection: $selectedItem,
+                                    matching: .images,
+                                    photoLibrary: .shared()
+                                ) {
+                                    Image(systemName: "photo.on.rectangle")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(
+                                            Circle()
+                                                .fill(.gray)
+                                                .shadow(radius: 4)
+                                        )
+                                        .accessibilityLabel(
+                                            "Scan photo from gallery"
+                                        )
+
+                                }
+                                .onChange(of: selectedItem) { _, newItem in
+                                    guard let newItem else { return }
+                                    Task {
+                                        // Load as Data and build UIImage
+                                        if let data =
+                                            try? await newItem.loadTransferable(
+                                                type: Data.self
+                                            ),
+                                            let image = UIImage(data: data)
+                                        {
+                                            cameraModel.recognizeGalleryImage(
+                                                image
+                                            )
+                                        }
+                                        // reset selection to allow re-selecting same photo
+                                        selectedItem = nil
+                                    }
                                 }
                             }
                         }
