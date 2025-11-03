@@ -38,6 +38,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
     private let output = AVCapturePhotoOutput()
     private let queue = DispatchQueue(label: "camera.frame.processing")
     private var textRequest: VNRecognizeTextRequest!
+    var previewLayer: AVCaptureVideoPreviewLayer?
     private var lastProcessingTime = Date.distantPast
 
     /// Capture a photo and start task to recognize text

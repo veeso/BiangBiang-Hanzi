@@ -11,11 +11,13 @@ import SwiftUI
 /// Wrapper SwiftUI per mostrare la preview della fotocamera
 struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
+    @ObservedObject var cameraModel: CameraModel
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.videoGravity = .resizeAspect
+        cameraModel.previewLayer = previewLayer
 
         if let connection = previewLayer.connection {
             if #available(iOS 17.0, *) {
@@ -42,6 +44,7 @@ struct CameraPreview: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         DispatchQueue.main.async {
             context.coordinator.previewLayer?.frame = uiView.bounds
+            cameraModel.previewLayer?.frame = uiView.bounds
         }
     }
 

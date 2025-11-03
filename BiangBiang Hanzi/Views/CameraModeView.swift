@@ -53,8 +53,11 @@ struct CameraModeView: View {
             GeometryReader { geo in
                 ZStack {
                     // 🎥 show live camera (always)
-                    CameraPreview(session: cameraModel.session)
-                        .ignoresSafeArea()
+                    CameraPreview(
+                        session: cameraModel.session,
+                        cameraModel: cameraModel
+                    )
+                    .ignoresSafeArea()
 
                     if let image = cameraModel.capturedImage {
                         // 📸 show taken photo
@@ -101,18 +104,6 @@ struct CameraModeView: View {
                                     .accessibilityLabel("Retake photo")
                                 }
                             } else {
-                                Button(action: cameraModel.capturePhoto) {
-                                    Image(systemName: "camera.fill")
-                                        .font(.system(size: 24))
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .background(
-                                            Circle()
-                                                .fill(.gray)
-                                                .shadow(radius: 4)
-                                        )
-                                        .accessibilityLabel("Take photo")
-                                }
                                 // Toggle Hanzi/Pinyin
                                 Button(action: {
                                     cameraModel.showPinyin.toggle()
@@ -140,6 +131,18 @@ struct CameraModeView: View {
                                         value: cameraModel.showPinyin
                                     )
                                     .accessibilityLabel("Toggle Pinyin")
+                                }
+                                Button(action: cameraModel.capturePhoto) {
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(
+                                            Circle()
+                                                .fill(.gray)
+                                                .shadow(radius: 4)
+                                        )
+                                        .accessibilityLabel("Take photo")
                                 }
                                 // Photo picker button
                                 PhotosPicker(
@@ -200,10 +203,17 @@ struct CameraModeView: View {
                     boundingBox.boundingBox,
                     in: viewSize
                 )
+                // center position
+                let y = max(0, frame.minY - (frame.height * 0.5))
+                let x = max(0, frame.minX + (frame.width * 0.5))
+                // dynamic font size
+                let fontSize = max(8, frame.height * 0.7)
 
                 VStack(spacing: 1) {
                     Text(text)
-                        .font(.system(size: 10, weight: .medium))
+                        .font(
+                            .system(size: fontSize, weight: .medium)
+                        )
                         .foregroundColor(.black)
 
                 }
@@ -219,22 +229,48 @@ struct CameraModeView: View {
                             y: 1
                         )
                 )
-                .position(x: frame.minX, y: frame.minY)
+                .frame(width: frame.width, height: frame.height)
+                .position(x: x, y: y)
 
             }
 
             private func visionToViewRect(_ rect: CGRect, in size: CGSize)
                 -> CGRect
             {
-                let viewWidth = size.width
-                let viewHeight = size.height
+                if let previewLayer = cameraModel.previewLayer {
+                    let videoRect = previewLayer.layerRectConverted(
+                        fromMetadataOutputRect: rect
+                    )
 
-                let x = rect.minX * viewWidth
-                let y = rect.midY * viewHeight
-                let width = rect.width * viewWidth
-                let height = rect.height * viewHeight
+                    // Clamp to visible borders
+                    let adjusted = CGRect(
+                        x: max(0, videoRect.origin.x),
+                        y: max(0, videoRect.origin.y),
+                        width: max(
+                            videoRect.width,
+                            viewSize.width - videoRect.origin.x
+                        ),
+                        height: min(
+                            videoRect.height,
+                            viewSize.height - videoRect.origin.y
+                        )
+                    )
+                    return adjusted
+                } else {
+                    // Fallback to base formula
+                    let viewWidth = size.width
+                    let viewHeight = size.height
 
-                return CGRect(x: x, y: y, width: width, height: height)
+                    let x = rect.minX * viewWidth
+                    let y = rect.midY * viewHeight
+                    let width = rect.width * viewWidth
+                    let height = rect.height * viewHeight
+
+                    let rect = CGRect(x: x, y: y, width: width, height: height)
+                    return rect
+
+                }
+
             }
 
         }

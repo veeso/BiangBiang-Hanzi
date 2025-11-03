@@ -12,17 +12,22 @@ struct SettingsView: View {
 
     let availableLanguages: [(id: String, name: String)] =
         Locale.availableIdentifiers.map { id in
-            (id: id, name: Locale.current.localizedString(forIdentifier: id) ?? id)
+            (
+                id: id,
+                name: Locale.current.localizedString(forIdentifier: id) ?? id
+            )
         }
         .sorted { $0.name < $1.name }
 
     var body: some View {
         NavigationView {
             Form {
-                Section(header: HStack {
-                    Image(systemName: "globe")
-                    Text("Translation language")
-                }) {
+                Section(
+                    header: HStack {
+                        Image(systemName: "globe")
+                        Text("Translation language")
+                    }
+                ) {
                     Picker("Language", selection: $settings.userLanguage) {
                         ForEach(availableLanguages, id: \.id) { option in
                             Text(option.name).tag(option.id)
@@ -31,11 +36,13 @@ struct SettingsView: View {
                     .pickerStyle(MenuPickerStyle())
                 }
 
-                Section(header: HStack {
-                    Image(systemName: "textformat")
-                    Text("Chinese variant")
-                        .font(.headline)
-                }) {
+                Section(
+                    header: HStack {
+                        Image(systemName: "textformat")
+                        Text("Chinese variant")
+                            .font(.headline)
+                    }
+                ) {
                     Picker("Variant", selection: $settings.chineseVariant) {
                         Text("Simplified").tag("zh-Hans")
                         Text("Traditional").tag("zh-Hant")
@@ -44,7 +51,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline) // stile iOS classico
+            .navigationBarTitleDisplayMode(.inline)  // stile iOS classico
         }
     }
 }

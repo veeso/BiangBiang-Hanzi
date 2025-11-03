@@ -11,7 +11,9 @@ import Foundation
 @MainActor
 final class AppSettings: ObservableObject {
     @Published var userLanguage: String {
-        didSet { UserDefaults.standard.set(userLanguage, forKey: "user_language") }
+        didSet {
+            UserDefaults.standard.set(userLanguage, forKey: "user_language")
+        }
     }
 
     @Published var chineseVariant: String {
@@ -20,10 +22,13 @@ final class AppSettings: ObservableObject {
 
     init(
         userDefaults: UserDefaults = .standard,
-        defaultLanguage: String = Locale.current.language.languageCode?.identifier ?? "en",
+        defaultLanguage: String = Locale.current.language.languageCode?
+            .identifier ?? "en",
         defaultChineseVariant: String = "zh-Hans"
     ) {
-        userLanguage = userDefaults.string(forKey: "user_language") ?? defaultLanguage
-        chineseVariant = userDefaults.string(forKey: "chinese") ?? defaultChineseVariant
+        userLanguage =
+            userDefaults.string(forKey: "user_language") ?? defaultLanguage
+        chineseVariant =
+            userDefaults.string(forKey: "chinese") ?? defaultChineseVariant
     }
 }

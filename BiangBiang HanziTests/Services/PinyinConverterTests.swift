@@ -5,8 +5,9 @@
 //  Created by christian visintin on 02/11/25.
 //
 
-@testable import BiangBiang_Hanzi
 import Testing
+
+@testable import BiangBiang_Hanzi
 
 struct PinyinConverterTests {
     @Test func shouldConvertHanziWordToPinyin() throws {
