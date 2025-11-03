@@ -103,7 +103,6 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
 
     /// Recognize and process text from a gallery image
     func recognizeGalleryImage(_ uiImage: UIImage) {
-        print("Setting image to \(uiImage)")
         // set image to gallery image
         capturedImage = uiImage
         // reck text

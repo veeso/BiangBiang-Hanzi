@@ -88,7 +88,7 @@ struct CameraModeView: View {
                                 {
                                     Image(
                                         systemName:
-                                            "arrow.uturn.backward.circle.fill"
+                                            "xmark.circle.fill"
                                     )
                                     .font(.system(size: 24))
                                     .foregroundColor(.white)
