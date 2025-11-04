@@ -25,6 +25,7 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .navigationViewStyle(.stack)
     }
 }
 
