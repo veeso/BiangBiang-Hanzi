@@ -8,7 +8,8 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
     <application
@@ -20,6 +21,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BiangBiangHanzi">
+        <activity
+            android:name=".ui.screens.TextModeFragment"
+            android:exported="false"
+            android:label="@string/title_activity_text_mode_fragment"
+            android:theme="@style/Theme.BiangBiangHanzi" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
