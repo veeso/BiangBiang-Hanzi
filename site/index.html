@@ -13,16 +13,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="index, follow" />
-  <meta property="og:image" content="https://biangbianghanzi.app/assets/images/og_preview.jpg" />
-  <meta property="og:image:type" content="image/jpg" />
+  <meta property="og:image" content="https://biangbianghanzi.app/assets/images/og_preview.jpeg" />
+  <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="1280" />
-  <meta property="og:image:height" content="640" />
+  <meta property="og:image:height" content="625" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Biang Biang Hanzi" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:url" content="https://biangbianghanzi.app" />
   <!-- tailwind -->
   <link href="output.css" rel="stylesheet" />
+  <link href="devices.css" rel="stylesheet" />
   <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
@@ -41,25 +42,35 @@
     </div>
 
     <!-- Download buttons -->
-    <div class="flex items-center justify-around">
-
+    <div class="flex items-center justify-around pb-8">
+      <a href="https://apps.apple.com/app/id6754869174" target="_blank" rel="noopener noreferrer">
+        <img src="assets/images/app_store.svg" alt="Download on the App Store" class="h-20 sm:h-10" />
+      </a>
     </div>
 
     <!-- Screenshots -->
-    <div class="grid grid-cols-2 sm:grid-cols-1 items-center justify-around w-full gap-4 p-4">
+    <div class="grid grid-cols-2 sm:grid-cols-1 items-center justify-around w-full gap-4 p-4 h-fit">
       <div class="flex items-center justify-center">
-        <img src="assets/images/preview.webp" width="420" height="720" alt="App Preview"
-          class="w-[420px] h-auto rounded-lg shadow-lg" />
+        <div class="device device-iphone-14-pro">
+          <div class="device-frame">
+            <img src="assets/images/preview.webp" width="279" height="606" alt="App Screenshot 1"
+              class="w-full p-2 h-auto rounded-3xl shadow-lg" />
+          </div>
+        </div>
       </div>
       <div class="flex items-center justify-center">
-        <img src="assets/images/camera_ocr.webp" width="420" height="720" alt="App Camera OCR"
-          class="w-[420px] h-auto rounded-lg shadow-lg" />
+        <div class="device device-iphone-14-pro">
+          <div class="device-frame">
+            <img src="assets/images/camera_ocr.webp" width="279" height="606" alt="App Camera OCR"
+              class="w-full p-2 h-auto rounded-3xl shadow-lg" />
+          </div>
+        </div>
       </div>
     </div>
   </main>
-  <footer class="bg-brand pt-16 pb-2 px-8">
+  <footer class="bg-brand pt-16 pb-2 px-20 sm:px-4">
     <div class="flex flex-col gap-8 items-center">
-      <div class="flex items-center justify-between gap-8 w-full">
+      <div class="flex sm:flex-col sm:items-start items-center justify-between gap-8 w-full">
         <!-- Links -->
         <div class="flex flex-col gap-4">
           <div>
@@ -76,6 +87,9 @@
         <div class="flex flex-col gap-4">
           <div>
             <span class="text-white">Christian Visintin</span>
+          </div>
+          <div>
+            <a href="mailto:info@veeso.dev" class="text-white underline">info@veeso.dev</a>
           </div>
           <div>
             <span class="text-white">Via Marangoni 33, 33100, Udine, Italy</span>

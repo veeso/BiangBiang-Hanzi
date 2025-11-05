@@ -107,3 +107,23 @@ a {
 a:hover {
   text-decoration: none;
 }
+
+.device.device-iphone-14-pro {
+  transform: scale(1);
+  transform-origin: top center;
+}
+
+/* Schermi medi */
+@media (max-width: 1024px) {
+  .device.device-iphone-14-pro {
+    transform: scale(0.8);
+  }
+}
+
+/* Schermi piccoli (smartphone) */
+@media (max-width: 640px) {
+  .device.device-iphone-14-pro {
+    transform: scale(0.6);
+    margin-bottom: -300px; /* regola a occhio */
+  }
+}
