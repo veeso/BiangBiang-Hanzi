@@ -36,15 +36,23 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.veeso.biangbianghanzi.R
+import dev.veeso.biangbianghanzi.services.HanziExtractor
+import dev.veeso.biangbianghanzi.services.OcrBox
+import dev.veeso.biangbianghanzi.services.OcrService
+import dev.veeso.biangbianghanzi.services.PinyinConverter
+import dev.veeso.biangbianghanzi.ui.screens.camera.OcrOverlay
 
 
 @Composable
 fun CameraModeView() {
 
     // states
+    val extractor = HanziExtractor()
+    val pinyinConverter = PinyinConverter()
     var convertToPinyin by remember { mutableStateOf(true) }
     var hasCameraPermission by remember { mutableStateOf(false) }
     var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
+    val ocrBoxes = remember { mutableStateListOf<OcrBox>() }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -71,6 +79,22 @@ fun CameraModeView() {
     }
     LaunchedEffect(lifecycleOwner) { cameraController.bindToLifecycle(lifecycleOwner) }
 
+    // add effect on captured image to do OCR
+    LaunchedEffect(capturedImage) {
+        capturedImage?.let { bitmap ->
+            ocrBoxes.clear()
+            ocrBoxes.addAll(OcrService.recognizeText(bitmap, transformText = { text ->
+                val hanzi = extractor.extract(text) ?: return@recognizeText null
+                if (convertToPinyin) {
+                    // convert to pinyin
+                    pinyinConverter.hanziToPinyin(hanzi)
+                } else {
+                    hanzi
+                }
+            }));
+        }
+    }
+
     // --- Gallery picker (Photo Picker) ---
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -89,9 +113,11 @@ fun CameraModeView() {
     }
 
     Scaffold() { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             if (capturedImage == null) {
                 // Camera preview layer
                 AndroidView(
@@ -111,6 +137,13 @@ fun CameraModeView() {
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
+                )
+
+                OcrOverlay(
+                    boxes = ocrBoxes,
+                    imageWidth = capturedImage!!.width,
+                    imageHeight = capturedImage!!.height,
+                    modifier = Modifier.fillMaxSize()
                 )
 
                 // reset button

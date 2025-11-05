@@ -53,18 +53,15 @@ fun TextModeView(
         LocaleList.getDefault().get(0) // first is active
     val translationLanguage by repo.translationLanguage.collectAsState(initial = currentLocale.language)
 
-    Scaffold(
-        topBar = {
-            TopBar()
-        }
-    ) { innerPadding ->
+    Scaffold() { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 96.dp),
+                .padding(horizontal = 20.dp, vertical = 5.dp),
             horizontalAlignment = Alignment.Start
         ) {
+            TopBar()
             // HANZI SECTION
             Section(
                 title = "Hanzi",
