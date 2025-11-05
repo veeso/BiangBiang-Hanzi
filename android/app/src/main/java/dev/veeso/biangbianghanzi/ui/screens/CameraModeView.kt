@@ -46,6 +46,7 @@ import dev.veeso.biangbianghanzi.services.OcrBox
 import dev.veeso.biangbianghanzi.services.OcrService
 import dev.veeso.biangbianghanzi.services.PinyinConverter
 import dev.veeso.biangbianghanzi.ui.screens.camera.OcrOverlay
+import java.io.File
 
 
 @Composable
@@ -54,6 +55,8 @@ fun CameraModeView() {
     // states
     val extractor = HanziExtractor()
     val pinyinConverter = PinyinConverter()
+    var frameWidth by remember { mutableStateOf(1) }
+    var frameHeight by remember { mutableStateOf(1) }
     var convertToPinyin by remember { mutableStateOf(true) }
     var hasCameraPermission by remember { mutableStateOf(false) }
     var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
@@ -76,9 +79,11 @@ fun CameraModeView() {
 
     val analyzer = remember {
         LiveOcrAnalyzer(
-            onResult = { newBoxes ->
+            onResult = { newBoxes, w, h ->
                 liveOcrBoxes.clear()
                 liveOcrBoxes.addAll(newBoxes)
+                frameWidth = w
+                frameHeight = h
             },
             transformText = transformOcr
         )
@@ -199,9 +204,10 @@ fun CameraModeView() {
                 )
                 OcrOverlay(
                     boxes = liveOcrBoxes,
-                    imageWidth = previewView.width,
-                    imageHeight = previewView.height,
-                    modifier = Modifier.fillMaxSize()
+                    imageWidth = frameWidth,
+                    imageHeight = frameHeight,
+                    modifier = Modifier.fillMaxSize(),
+                    isLive = true
                 )
             } else {
                 // show captured image
@@ -216,7 +222,8 @@ fun CameraModeView() {
                     boxes = ocrBoxes,
                     imageWidth = capturedImage!!.width,
                     imageHeight = capturedImage!!.height,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    isLive = false
                 )
 
                 // reset button
@@ -311,20 +318,9 @@ fun capturePhoto(
     imageCapture: ImageCapture,
     onPhotoCaptured: (Bitmap?) -> Unit
 ) {
-    // create file info
-    val contentValues = ContentValues().apply {
-        put(MediaStore.Images.Media.DISPLAY_NAME, "biangbianghanzi_capture.jpg")
-        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            put(MediaStore.Images.Media.RELATIVE_PATH, "DCIM/BiangBiangHanzi")
-        }
-    }
 
-    val outputOptions = ImageCapture.OutputFileOptions.Builder(
-        context.contentResolver,
-        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-        contentValues
-    ).build()
+    val photoFile = File(context.cacheDir, "capture.jpg")
+    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
     // take picture async
     imageCapture.takePicture(

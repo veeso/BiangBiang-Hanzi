@@ -50,7 +50,7 @@ object OcrService {
 
 
 class LiveOcrAnalyzer(
-    private val onResult: (List<OcrBox>) -> Unit,
+    private val onResult: (List<OcrBox>, Int, Int) -> Unit,
     private val transformText: (String) -> String?
 ) : ImageAnalysis.Analyzer {
 
@@ -94,7 +94,7 @@ class LiveOcrAnalyzer(
                             )
                         }
                     }
-                onResult(boxes)
+                onResult(boxes, image.width, image.height)
             }
             .addOnFailureListener { /* ignore for now */ }
             .addOnCompleteListener { imageProxy.close() }

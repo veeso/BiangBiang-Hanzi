@@ -22,7 +22,8 @@ fun OcrOverlay(
     boxes: List<OcrBox>,
     imageWidth: Int,
     imageHeight: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLive: Boolean
 ) {
     val textMeasurer = rememberTextMeasurer()
     val fontFamily = typography.bodySmall.fontFamily
@@ -33,10 +34,31 @@ fun OcrOverlay(
             val scaleX = size.width / imageWidth
             val scaleY = size.height / imageHeight
 
+            val imageAspect = imageWidth.toFloat() / imageHeight
+            val viewAspect = size.width / size.height
+            var verticalOffset: Float = 0f
+            var horizontalOffset: Float = 0f
+
+            if (isLive) {
+                if (imageAspect > viewAspect) {
+                    val scaledHeight = size.width / imageAspect
+                    verticalOffset = (size.height - scaledHeight) / 4f
+                    horizontalOffset = 0f
+                } else {
+                    val scaledWidth = size.height * imageAspect
+                    horizontalOffset = (size.width - scaledWidth) / 2f
+                    verticalOffset = 0f
+                }
+            }
+
             boxes.forEach { box ->
-                val boxHeightScaled = box.height * scaleY
-                val dynamicFontSize = (boxHeightScaled * 0.6f).sp
-                
+                val boxHeightScaled = if (isLive) {
+                    (box.height * scaleY) / imageAspect
+                } else {
+                    box.height * scaleY
+                }
+                val dynamicFontSize = (boxHeightScaled * 0.5f).sp
+
                 val textLayout = textMeasurer.measure(
                     text = box.text,
                     style = TextStyle(
@@ -50,8 +72,8 @@ fun OcrOverlay(
 
                 val width = max(box.width * scaleX, measuredWidth + 12f)
                 val height = max(box.height * scaleY, measuredHeight + 12f)
-                val left = box.left * scaleX
-                val top = box.top * scaleY
+                val left = box.left * scaleX + horizontalOffset
+                val top = box.top * scaleY - verticalOffset
 
                 drawRoundRect(
                     color = Color.White.copy(alpha = 0.9f),
