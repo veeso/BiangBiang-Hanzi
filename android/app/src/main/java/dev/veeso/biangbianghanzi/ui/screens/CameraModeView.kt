@@ -12,8 +12,12 @@ import androidx.camera.view.PreviewView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.Image
 import androidx.compose.material3.*
@@ -37,6 +41,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.veeso.biangbianghanzi.R
 import dev.veeso.biangbianghanzi.services.HanziExtractor
+import dev.veeso.biangbianghanzi.services.LiveOcrAnalyzer
 import dev.veeso.biangbianghanzi.services.OcrBox
 import dev.veeso.biangbianghanzi.services.OcrService
 import dev.veeso.biangbianghanzi.services.PinyinConverter
@@ -53,9 +58,31 @@ fun CameraModeView() {
     var hasCameraPermission by remember { mutableStateOf(false) }
     var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
     val ocrBoxes = remember { mutableStateListOf<OcrBox>() }
+    val liveOcrBoxes = remember { mutableStateListOf<OcrBox>() }
+
+    val transformOcr = let@{ text: String ->
+        val hanzi = extractor.extract(text) ?: return@let null
+        if (convertToPinyin) {
+            // convert to pinyin
+            pinyinConverter.hanziToPinyin(hanzi)
+        } else {
+            hanzi
+        }
+    }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+
+    val analyzer = remember {
+        LiveOcrAnalyzer(
+            onResult = { newBoxes ->
+                liveOcrBoxes.clear()
+                liveOcrBoxes.addAll(newBoxes)
+            },
+            transformText = transformOcr
+        )
+    }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -72,28 +99,74 @@ fun CameraModeView() {
         LifecycleCameraController(context).apply {
             setEnabledUseCases(
                 LifecycleCameraController.IMAGE_CAPTURE or
-                        LifecycleCameraController.VIDEO_CAPTURE
+                        LifecycleCameraController.VIDEO_CAPTURE or
+                        LifecycleCameraController.IMAGE_ANALYSIS
             )
             imageCaptureMode = ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
         }
     }
+
+    LaunchedEffect(cameraController) {
+        cameraController.setImageAnalysisAnalyzer(
+            ContextCompat.getMainExecutor(context),
+            analyzer
+        )
+    }
+
     LaunchedEffect(lifecycleOwner) { cameraController.bindToLifecycle(lifecycleOwner) }
+
+    val previewView = remember {
+        PreviewView(context).apply {
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            scaleType = PreviewView.ScaleType.FILL_CENTER
+            controller = cameraController
+        }
+    }
 
     // add effect on captured image to do OCR
     LaunchedEffect(capturedImage) {
+        // always clear
+        ocrBoxes.clear()
         capturedImage?.let { bitmap ->
-            ocrBoxes.clear()
-            ocrBoxes.addAll(OcrService.recognizeText(bitmap, transformText = { text ->
-                val hanzi = extractor.extract(text) ?: return@recognizeText null
-                if (convertToPinyin) {
-                    // convert to pinyin
-                    pinyinConverter.hanziToPinyin(hanzi)
-                } else {
-                    hanzi
-                }
-            }));
+            ocrBoxes.addAll(OcrService.recognizeText(bitmap, transformText = transformOcr));
         }
     }
+
+    val imageCapture = remember {
+        ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .build()
+    }
+
+    LaunchedEffect(hasCameraPermission) {
+        if (!hasCameraPermission) return@LaunchedEffect
+
+        val cameraProvider = ProcessCameraProvider.getInstance(context).get()
+        val preview = Preview.Builder().build().also {
+            it.surfaceProvider = previewView.surfaceProvider
+        }
+
+        val analysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                it.setAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
+            }
+
+        try {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                CameraSelector.DEFAULT_BACK_CAMERA,
+                preview,
+                imageCapture,
+                analysis
+            )
+        } catch (exc: Exception) {
+            exc.printStackTrace()
+        }
+    }
+
 
     // --- Gallery picker (Photo Picker) ---
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -122,13 +195,13 @@ fun CameraModeView() {
                 // Camera preview layer
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
-                    factory = { ctx ->
-                        PreviewView(ctx).apply {
-                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                            scaleType = PreviewView.ScaleType.FILL_CENTER
-                            controller = cameraController
-                        }
-                    }
+                    factory = { previewView }
+                )
+                OcrOverlay(
+                    boxes = liveOcrBoxes,
+                    imageWidth = previewView.width,
+                    imageHeight = previewView.height,
+                    modifier = Modifier.fillMaxSize()
                 )
             } else {
                 // show captured image
@@ -197,7 +270,7 @@ fun CameraModeView() {
                             onClick = {
                                 if (hasCameraPermission) capturePhoto(
                                     context,
-                                    cameraController
+                                    imageCapture
                                 ) { bitmap ->
                                     capturedImage = bitmap
                                 }
@@ -235,7 +308,7 @@ fun CameraModeView() {
 
 fun capturePhoto(
     context: Context,
-    controller: LifecycleCameraController,
+    imageCapture: ImageCapture,
     onPhotoCaptured: (Bitmap?) -> Unit
 ) {
     // create file info
@@ -254,7 +327,7 @@ fun capturePhoto(
     ).build()
 
     // take picture async
-    controller.takePicture(
+    imageCapture.takePicture(
         outputOptions,
         ContextCompat.getMainExecutor(context),
         object : ImageCapture.OnImageSavedCallback {
