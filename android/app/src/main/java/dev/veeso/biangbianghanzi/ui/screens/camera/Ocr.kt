@@ -4,13 +4,18 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -23,6 +28,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import dev.veeso.biangbianghanzi.services.OcrBox
+import kotlinx.coroutines.delay
 import kotlin.math.max
 
 @Composable
@@ -37,6 +43,20 @@ fun OcrOverlay(
     val textMeasurer = rememberTextMeasurer()
     val context = LocalContext.current
     val fontFamily = typography.bodySmall.fontFamily
+
+    // highlight selected box
+    var highlightedBox by remember { mutableStateOf<OcrBox?>(null) }
+    val highlightAlpha by animateFloatAsState(
+        targetValue = if (highlightedBox != null) 0.4f else 0f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300),
+        label = "highlightAlpha"
+    )
+    // reset highlight after delay
+    val resetHighlight =
+        LaunchedEffect(highlightedBox) {
+            delay(300)
+            highlightedBox = null
+        }
 
     val renderedBoxes = remember { mutableListOf<Pair<OcrBox, android.graphics.RectF>>() }
     renderedBoxes.clear()
@@ -54,6 +74,8 @@ fun OcrOverlay(
                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("OCR text", text))
                         Toast.makeText(context, "Text copied", Toast.LENGTH_SHORT).show()
+                        // trigger highlight
+                        highlightedBox = box
                     }
                 }
             }
@@ -118,6 +140,14 @@ fun OcrOverlay(
                     size = Size(width, height),
                     cornerRadius = CornerRadius(12f, 12f)
                 )
+                if (highlightedBox == box && highlightAlpha > 0f) {
+                    drawRoundRect(
+                        color = Color(0xFFB0C4DE).copy(alpha = highlightAlpha),
+                        topLeft = Offset(left, top),
+                        size = Size(width, height),
+                        cornerRadius = CornerRadius(12f, 12f)
+                    )
+                }
                 drawText(
                     textLayout,
                     topLeft = Offset(left + 6f, top + 6f)
