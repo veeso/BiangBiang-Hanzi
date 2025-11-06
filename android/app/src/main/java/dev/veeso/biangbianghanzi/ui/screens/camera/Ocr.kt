@@ -1,15 +1,23 @@
 package dev.veeso.biangbianghanzi.ui.screens.camera
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -27,9 +35,29 @@ fun OcrOverlay(
     showPinyin: Boolean,
 ) {
     val textMeasurer = rememberTextMeasurer()
+    val context = LocalContext.current
     val fontFamily = typography.bodySmall.fontFamily
 
-    Box(modifier = modifier) {
+    val renderedBoxes = remember { mutableListOf<Pair<OcrBox, android.graphics.RectF>>() }
+    renderedBoxes.clear()
+
+    Box(
+        modifier = modifier
+            .pointerInput(boxes, showPinyin, imageWidth, imageHeight) {
+                detectTapGestures { offset ->
+                    val hit = renderedBoxes.firstOrNull { (_, rect) ->
+                        rect.contains(offset.x, offset.y)
+                    }?.first
+                    hit?.let { box ->
+                        val text = if (showPinyin) box.pinyin else box.hanzi
+                        val clipboard =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("OCR text", text))
+                        Toast.makeText(context, "Text copied", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+    ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             // Scale factors to match actual image vs displayed size
             val scaleX = size.width / imageWidth
@@ -79,6 +107,10 @@ fun OcrOverlay(
                 val height = max(box.height * scaleY, measuredHeight + 12f)
                 val left = box.left * scaleX + horizontalOffset
                 val top = box.top * scaleY - verticalOffset
+
+                renderedBoxes.add(
+                    box to android.graphics.RectF(left, top, left + width, top + height)
+                )
 
                 drawRoundRect(
                     color = Color.White.copy(alpha = 0.9f),
