@@ -1,8 +1,6 @@
 package dev.veeso.biangbianghanzi.ui.screens
 
 import android.Manifest
-import android.content.ContentValues
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
@@ -15,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.LifecycleCameraController
@@ -40,38 +37,24 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.veeso.biangbianghanzi.R
-import dev.veeso.biangbianghanzi.services.HanziExtractor
+import dev.veeso.biangbianghanzi.capturePhoto
 import dev.veeso.biangbianghanzi.services.LiveOcrAnalyzer
 import dev.veeso.biangbianghanzi.services.OcrBox
 import dev.veeso.biangbianghanzi.services.OcrService
-import dev.veeso.biangbianghanzi.services.PinyinConverter
 import dev.veeso.biangbianghanzi.ui.screens.camera.OcrOverlay
-import java.io.File
 
 
 @Composable
 fun CameraModeView() {
 
     // states
-    val extractor = HanziExtractor()
-    val pinyinConverter = PinyinConverter()
-    var frameWidth by remember { mutableStateOf(1) }
-    var frameHeight by remember { mutableStateOf(1) }
+    var frameWidth by remember { mutableIntStateOf(1) }
+    var frameHeight by remember { mutableIntStateOf(1) }
     var convertToPinyin by remember { mutableStateOf(true) }
     var hasCameraPermission by remember { mutableStateOf(false) }
     var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
     val ocrBoxes = remember { mutableStateListOf<OcrBox>() }
     val liveOcrBoxes = remember { mutableStateListOf<OcrBox>() }
-
-    val transformOcr = let@{ text: String ->
-        val hanzi = extractor.extract(text) ?: return@let null
-        if (convertToPinyin) {
-            // convert to pinyin
-            pinyinConverter.hanziToPinyin(hanzi)
-        } else {
-            hanzi
-        }
-    }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -85,7 +68,6 @@ fun CameraModeView() {
                 frameWidth = w
                 frameHeight = h
             },
-            transformText = transformOcr
         )
     }
 
@@ -118,8 +100,6 @@ fun CameraModeView() {
         )
     }
 
-    LaunchedEffect(lifecycleOwner) { cameraController.bindToLifecycle(lifecycleOwner) }
-
     val previewView = remember {
         PreviewView(context).apply {
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
@@ -133,7 +113,7 @@ fun CameraModeView() {
         // always clear
         ocrBoxes.clear()
         capturedImage?.let { bitmap ->
-            ocrBoxes.addAll(OcrService.recognizeText(bitmap, transformText = transformOcr));
+            ocrBoxes.addAll(OcrService.recognizeHanzi(bitmap));
         }
     }
 
@@ -141,6 +121,10 @@ fun CameraModeView() {
         ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
+    }
+
+    LaunchedEffect(cameraController) {
+        previewView.controller = cameraController
     }
 
     LaunchedEffect(hasCameraPermission) {
@@ -177,16 +161,17 @@ fun CameraModeView() {
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        uri?.let {
-            // decode URI -> Bitmap
-            val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val source = ImageDecoder.createSource(context.contentResolver, it)
-                ImageDecoder.decodeBitmap(source)
-            } else {
-                @Suppress("DEPRECATION")
-                MediaStore.Images.Media.getBitmap(context.contentResolver, it)
-            }
-            capturedImage = bitmap
+        uri?.let { it ->
+            runCatching {
+                // decode URI -> Bitmap
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val source = ImageDecoder.createSource(context.contentResolver, it)
+                    ImageDecoder.decodeBitmap(source)
+                } else {
+                    @Suppress("DEPRECATION")
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+                }
+            }.onSuccess { capturedImage = it }
         }
     }
 
@@ -207,7 +192,8 @@ fun CameraModeView() {
                     imageWidth = frameWidth,
                     imageHeight = frameHeight,
                     modifier = Modifier.fillMaxSize(),
-                    isLive = true
+                    isLive = true,
+                    showPinyin = convertToPinyin
                 )
             } else {
                 // show captured image
@@ -223,7 +209,8 @@ fun CameraModeView() {
                     imageWidth = capturedImage!!.width,
                     imageHeight = capturedImage!!.height,
                     modifier = Modifier.fillMaxSize(),
-                    isLive = false
+                    isLive = false,
+                    showPinyin = convertToPinyin
                 )
 
                 // reset button
@@ -309,45 +296,4 @@ fun CameraModeView() {
 
         }
     }
-
-
-}
-
-fun capturePhoto(
-    context: Context,
-    imageCapture: ImageCapture,
-    onPhotoCaptured: (Bitmap?) -> Unit
-) {
-
-    val photoFile = File(context.cacheDir, "capture.jpg")
-    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-
-    // take picture async
-    imageCapture.takePicture(
-        outputOptions,
-        ContextCompat.getMainExecutor(context),
-        object : ImageCapture.OnImageSavedCallback {
-            override fun onError(exc: ImageCaptureException) {
-                Toast.makeText(context, "Capture failed: ${exc.message}", Toast.LENGTH_SHORT).show()
-                onPhotoCaptured(null)
-            }
-
-            override fun onImageSaved(res: ImageCapture.OutputFileResults) {
-                val uri = res.savedUri ?: return
-                try {
-                    val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        val source = ImageDecoder.createSource(context.contentResolver, uri)
-                        ImageDecoder.decodeBitmap(source)
-                    } else {
-                        @Suppress("DEPRECATION")
-                        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-                    }
-                    onPhotoCaptured(bitmap)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    onPhotoCaptured(null)
-                }
-            }
-        }
-    )
 }

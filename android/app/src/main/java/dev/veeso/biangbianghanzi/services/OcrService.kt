@@ -1,6 +1,8 @@
 package dev.veeso.biangbianghanzi.services
 
 import android.graphics.Bitmap
+import androidx.annotation.OptIn
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
@@ -9,7 +11,8 @@ import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 import kotlinx.coroutines.tasks.await
 
 data class OcrBox(
-    val text: String,
+    val hanzi: String,
+    val pinyin: String,
     val left: Int,
     val top: Int,
     val width: Int,
@@ -21,9 +24,11 @@ object OcrService {
     private val recognizer =
         TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
 
-    suspend fun recognizeText(
+    private val hanziRecognizer = HanziExtractor()
+    private val pinyinConverter = PinyinConverter()
+
+    suspend fun recognizeHanzi(
         bitmap: Bitmap,
-        transformText: (String) -> String?
     ): List<OcrBox> {
         val image = InputImage.fromBitmap(bitmap, 0)
         val result = recognizer.process(image).await()
@@ -32,10 +37,12 @@ object OcrService {
             .flatMap { it.lines }
             .flatMap { it.elements }
             .mapNotNull { element ->
-                val transformedText = transformText(element.text) ?: return@mapNotNull null
+                val hanzi = hanziRecognizer.extract(element.text) ?: return@mapNotNull null
+                val pinyin = pinyinConverter.hanziToPinyin(hanzi)
                 element.boundingBox?.let { box ->
                     OcrBox(
-                        text = transformedText,
+                        hanzi = hanzi,
+                        pinyin = pinyin,
                         left = box.left,
                         top = box.top,
                         width = box.width(),
@@ -50,8 +57,7 @@ object OcrService {
 
 
 class LiveOcrAnalyzer(
-    private val onResult: (List<OcrBox>, Int, Int) -> Unit,
-    private val transformText: (String) -> String?
+    private val onResult: (List<OcrBox>, Int, Int) -> Unit
 ) : ImageAnalysis.Analyzer {
 
 
@@ -59,8 +65,12 @@ class LiveOcrAnalyzer(
         ChineseTextRecognizerOptions.Builder().build()
     )
 
+    private val hanziRecognizer = HanziExtractor()
+    private val pinyinConverter = PinyinConverter()
+
     private var lastProcessedTime = 0L
 
+    @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
         val now = System.currentTimeMillis()
         if (now - lastProcessedTime < 1000) {
@@ -83,10 +93,12 @@ class LiveOcrAnalyzer(
                     .flatMap { it.lines }
                     .flatMap { it.elements }
                     .mapNotNull { element ->
-                        val transformedText = transformText(element.text) ?: return@mapNotNull null
+                        val hanzi = hanziRecognizer.extract(element.text) ?: return@mapNotNull null
+                        val pinyin = pinyinConverter.hanziToPinyin(hanzi)
                         element.boundingBox?.let { box ->
                             OcrBox(
-                                text = transformedText,
+                                hanzi = hanzi,
+                                pinyin = pinyin,
                                 left = box.left,
                                 top = box.top,
                                 width = box.width(),

@@ -23,7 +23,8 @@ fun OcrOverlay(
     imageWidth: Int,
     imageHeight: Int,
     modifier: Modifier = Modifier,
-    isLive: Boolean
+    isLive: Boolean,
+    showPinyin: Boolean,
 ) {
     val textMeasurer = rememberTextMeasurer()
     val fontFamily = typography.bodySmall.fontFamily
@@ -52,15 +53,19 @@ fun OcrOverlay(
             }
 
             boxes.forEach { box ->
+                val textToDisplay = if (showPinyin) box.pinyin else box.hanzi
+                val scaleRatio =
+                    if (showPinyin) box.hanzi.length.toFloat() / box.pinyin.length.toFloat() else 1f
+                val scaleFactor = scaleRatio.coerceIn(0.6f, 1.0f)
                 val boxHeightScaled = if (isLive) {
                     (box.height * scaleY) / imageAspect
                 } else {
                     box.height * scaleY
                 }
-                val dynamicFontSize = (boxHeightScaled * 0.5f).sp
+                val dynamicFontSize = (boxHeightScaled * 0.5f * scaleFactor).sp
 
                 val textLayout = textMeasurer.measure(
-                    text = box.text,
+                    text = textToDisplay,
                     style = TextStyle(
                         color = Color.Black,
                         fontSize = dynamicFontSize,
