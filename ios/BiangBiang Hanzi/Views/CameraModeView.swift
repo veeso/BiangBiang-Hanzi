@@ -72,11 +72,10 @@ struct CameraModeView: View {
                     // Recognized text
                     ForEach(cameraModel.recognizedTexts) { box in
                         if let pinyin = cameraModel.pinyinMap[box.id] {
-                            let text =
-                                cameraModel.showPinyin ? pinyin : box.text
                             TextOverlay(
                                 cameraModel: cameraModel,
-                                text: text,
+                                hanzi: box.text,
+                                pinyin: pinyin,
                                 boundingBox: box,
                                 viewSize: geo.size
                             )
@@ -194,7 +193,8 @@ struct CameraModeView: View {
 
         private struct TextOverlay: View {
             @ObservedObject var cameraModel: CameraModel
-            let text: String
+            let hanzi: String
+            let pinyin: String
             let boundingBox: RecognizedTextBox
             let viewSize: CGSize
 
@@ -204,17 +204,30 @@ struct CameraModeView: View {
                     in: viewSize
                 )
                 // center position
-                let y = max(0, frame.minY - (frame.height * 0.5))
+
                 let x = max(0, frame.minX + (frame.width * 0.5))
                 // dynamic font size
-                let fontSize = max(8, frame.height * 0.7)
+                let scaleRatio =
+                    cameraModel.showPinyin
+                    ? CGFloat(hanzi.count) / CGFloat(pinyin.count) : 1.0
+                let scaleFactor = min(max(scaleRatio, 0.6), 1.0)
+                let fontSize = max(8, frame.height * scaleFactor)
+                let textToDisplay = cameraModel.showPinyin ? pinyin : hanzi
+
+                // calculate y and remove half of the font size
+                let y = max(
+                    0,
+                    frame.minY - (frame.height * 0.5) - (fontSize * 0.2)
+                )
 
                 VStack(spacing: 1) {
-                    Text(text)
+                    Text(textToDisplay)
                         .font(
                             .system(size: fontSize, weight: .medium)
                         )
                         .foregroundColor(.black)
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
 
                 }
                 .textSelection(.enabled)
@@ -241,21 +254,15 @@ struct CameraModeView: View {
                     let videoRect = previewLayer.layerRectConverted(
                         fromMetadataOutputRect: rect
                     )
-
-                    // Clamp to visible borders
-                    let adjusted = CGRect(
-                        x: max(0, videoRect.origin.x),
-                        y: max(0, videoRect.origin.y),
-                        width: max(
-                            videoRect.width,
-                            viewSize.width - videoRect.origin.x
-                        ),
-                        height: min(
-                            videoRect.height,
-                            viewSize.height - videoRect.origin.y
-                        )
+                    // X must be flipped for some reasons...
+                    let flippedX =
+                        size.width - videoRect.origin.x - videoRect.width
+                    return CGRect(
+                        x: flippedX,
+                        y: videoRect.origin.y,
+                        width: videoRect.width,
+                        height: videoRect.height
                     )
-                    return adjusted
                 } else {
                     // Fallback to base formula
                     let viewWidth = size.width

@@ -25,6 +25,10 @@ You can purchase 𰻝𰻝汉子 BiangBiang Hanzi from the App Store and from the
 
 [![App Store](./assets/app_store_badge.png)](https://apps.apple.com/app/id6754869174)
 
+## License
+
+This project is licensed under the Elastic V2 license. See the [LICENSE](./LICENSE) file for details.
+
 ## Gallery
 
 Convert Hanzi to Pinyin and translate.
@@ -38,7 +42,3 @@ Recognize hanzi from live images and convert to Pinyin.
 Configure whether to use traditional or simplified Chinese characters.
 
 ![Settings](./assets/settings.png)
-
-## License
-
-This project is licensed under the Elastic V2 license. See the [LICENSE](./LICENSE) file for details.
