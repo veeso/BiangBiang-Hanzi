@@ -24,6 +24,7 @@ I developed this app to help myself and others learn Chinese more effectively by
 You can purchase 𰻝𰻝汉子 BiangBiang Hanzi from the App Store and from the Google Play Store (coming soon).
 
 [![App Store](./assets/app_store_badge.png)](https://apps.apple.com/app/id6754869174)
+[![Google Play](./assets/google_play_badge.png)](https://play.google.com/store/apps/details?id=dev.veeso.biangbianghanzi)
 
 ## License
 
