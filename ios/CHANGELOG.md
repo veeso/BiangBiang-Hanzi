@@ -3,11 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
-  - [Unreleased](#unreleased)
+  - [0.1.3](#013)
   - [0.1.2](#012)
   - [0.1.1](#011)
 
-## Unreleased
+## 0.1.3
+
+Released on 16/11/2025
 
 - [Issue 2](https://github.com/veeso/BiangBiang-Hanzi/issues/2): Fixed camera not auto-focusing when moving closer to text.
 - [Issue 4](https://github.com/veeso/BiangBiang-Hanzi/issues/4): Better feedback for copying text to clipboard from text overlays.
