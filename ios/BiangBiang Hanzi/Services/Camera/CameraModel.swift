@@ -171,7 +171,57 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         session.beginConfiguration()
         defer { session.commitConfiguration() }
 
-        guard let device = AVCaptureDevice.default(for: .video) else { return }
+        let discovery = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInUltraWideCamera, .builtInWideAngleCamera],
+            mediaType: .video,
+            position: .back
+        )
+
+        // Prefer ultra-wide for macro
+        let device =
+            discovery.devices.first(where: {
+                $0.deviceType == .builtInUltraWideCamera
+            })
+            ?? discovery.devices.first(where: {
+                $0.deviceType == .builtInWideAngleCamera
+            })
+
+        guard let device else { return }
+
+        // configure camera focus
+        do {
+            try device.lockForConfiguration()
+
+            if let format = device.formats.first(where: {
+                $0.videoSupportedFrameRateRanges.first!.maxFrameRate >= 30
+            }) {
+                device.activeFormat = format
+            }
+
+            if device.isFocusPointOfInterestSupported {
+                device.focusPointOfInterest = CGPoint(x: 0.5, y: 0.5)
+                device.focusMode = .autoFocus
+            }
+
+            // Near focus
+            if device.isAutoFocusRangeRestrictionSupported {
+                device.autoFocusRangeRestriction = .near
+            }
+
+            // Continuous AF
+            if device.isFocusModeSupported(.continuousAutoFocus) {
+                device.focusMode = .continuousAutoFocus
+            }
+
+            // Exposure continuous
+            if device.isExposureModeSupported(.continuousAutoExposure) {
+                device.exposureMode = .continuousAutoExposure
+            }
+
+            device.unlockForConfiguration()
+        } catch {
+            print("⚠️ Failed to configure camera focus: \(error)")
+        }
 
         // Remove existing inputs to avoid duplicates
         for input in session.inputs {
