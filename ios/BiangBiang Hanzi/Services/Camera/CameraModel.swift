@@ -32,6 +32,8 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
     @Published var missingCameraPermission: Bool = false
     /// Whether to show pinyin instead of Hanzi in overlays
     @Published var showPinyin: Bool = true
+    /// Show copied toast
+    @Published var showCopiedToast: Bool = false
 
     let session = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
