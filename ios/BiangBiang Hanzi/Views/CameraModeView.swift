@@ -185,6 +185,20 @@ struct CameraModeView: View {
                         }
                         .padding(.bottom, 40)
                     }
+                    if cameraModel.showCopiedToast {
+                        CopyToast()
+                            .transition(
+                                .move(edge: .bottom).combined(with: .opacity)
+                            )
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 40)
+                            .animation(
+                                .easeOut(duration: 0.25),
+                                value: cameraModel.showCopiedToast
+                            )
+                            .allowsHitTesting(false)
+                            .alignmentGuide(.bottom) { d in d[.bottom] }
+                    }
                 }
             }.task {
                 await cameraModel.checkPermissionsAndStart()
@@ -192,6 +206,8 @@ struct CameraModeView: View {
         }
 
         private struct TextOverlay: View {
+            @State private var isCopied = false
+
             @ObservedObject var cameraModel: CameraModel
             let hanzi: String
             let pinyin: String
@@ -220,31 +236,54 @@ struct CameraModeView: View {
                     frame.minY - (frame.height * 0.5) - (fontSize * 0.2)
                 )
 
-                VStack(spacing: 1) {
-                    Text(textToDisplay)
-                        .font(
-                            .system(size: fontSize, weight: .medium)
+                ZStack {
+                    Button {
+                        copy(textToDisplay)
+                    } label: {
+                        VStack(spacing: 1) {
+                            Text(textToDisplay)
+                                .font(.system(size: fontSize, weight: .medium))
+                                .foregroundColor(isCopied ? .blue : .black)
+                                .minimumScaleFactor(0.5)
+                                .lineLimit(1)
+                                .animation(
+                                    .easeOut(duration: 0.25),
+                                    value: isCopied
+                                )
+                        }
+                        .padding(4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.white.opacity(0.9))
+                                .shadow(
+                                    color: .black.opacity(0.2),
+                                    radius: 1,
+                                    x: 0,
+                                    y: 1
+                                )
                         )
-                        .foregroundColor(.black)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-
+                    }
+                    .buttonStyle(.plain)  // disable default blue style
+                    .frame(width: frame.width, height: frame.height)
+                    .position(x: x, y: y)
                 }
-                .textSelection(.enabled)
-                .padding(4)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.white.opacity(0.9))
-                        .shadow(
-                            color: .black.opacity(0.2),
-                            radius: 1,
-                            x: 0,
-                            y: 1
-                        )
-                )
-                .frame(width: frame.width, height: frame.height)
-                .position(x: x, y: y)
+            }
 
+            private func copy(_ text: String) {
+                UIPasteboard.general.string = text
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+                isCopied = true
+                cameraModel.showCopiedToast = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    isCopied = false
+                }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        cameraModel.showCopiedToast = false
+                    }
+                }
             }
 
             private func visionToViewRect(_ rect: CGRect, in size: CGSize)
@@ -280,6 +319,18 @@ struct CameraModeView: View {
 
             }
 
+        }
+    }
+
+    struct CopyToast: View {
+        var body: some View {
+            Text("Text copied")
+                .font(.system(size: 14, weight: .semibold))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .shadow(radius: 6)
         }
     }
 }
