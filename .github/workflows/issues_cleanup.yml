@@ -1,0 +1,60 @@
+name: Issues Cleanup
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # every day at 2 AM UTC
+  workflow_dispatch: # trigger manually
+
+permissions:
+  issues: write
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close issues without android/iOS label
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner,
+                repo,
+                state: "open",
+                per_page: 100,
+              }
+            );
+
+            for (const issue of issues) {
+              if (issue.pull_request) continue;
+
+              const labels = issue.labels.map(l => l.name);
+
+              const hasBugOrPerf =
+                labels.includes("bug") || labels.includes("perf");
+
+              const hasAndroidOrIOS =
+                labels.includes("android") || labels.includes("iOS");
+
+              if (hasBugOrPerf && !hasAndroidOrIOS) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: "Issues without android or iOS label are being closed.",
+                });
+
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  state: "closed",
+                });
+
+                console.log(`Closed issue #${issue.number}`);
+              }
+            }

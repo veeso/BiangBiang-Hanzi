@@ -9,11 +9,13 @@ import Foundation
 
 struct HanziExtractor {
 
-    /// Given a string takes out hanzi text
+    /// Given a string takes out hanzi text.
+    ///
+    /// Numbers must be kept
     func extract(text: String) -> String? {
         // Unicode range for CJK Unified Ideographs: U+4E00–U+9FFF
         // Extended ranges (A, B, C, D...) can be added if needed.
-        let pattern = "[\\u4E00-\\u9FFF]+"
+        let pattern = "[\\u4E00-\\u9FFF0-9]+"
 
         guard
             let regex = try? NSRegularExpression(pattern: pattern, options: [])
