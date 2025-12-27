@@ -38,14 +38,14 @@ jobs:
                 labels.includes("bug") || labels.includes("perf");
 
               const hasAndroidOrIOS =
-                labels.includes("android") || labels.includes("iOS");
+                labels.includes("Android") || labels.includes("iOS");
 
               if (hasBugOrPerf && !hasAndroidOrIOS) {
                 await github.rest.issues.createComment({
                   owner,
                   repo,
                   issue_number: issue.number,
-                  body: "Issues without android or iOS label are being closed.",
+                  body: "Issues without Android or iOS label are being closed.",
                 });
 
                 await github.rest.issues.update({
