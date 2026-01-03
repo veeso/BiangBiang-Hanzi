@@ -1,6 +1,11 @@
 package dev.veeso.biangbianghanzi.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.LocaleList
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
@@ -8,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import dev.veeso.biangbianghanzi.services.AppSettingsRepository
 import dev.veeso.biangbianghanzi.services.SIMPLIFIED_CHINESE
 import dev.veeso.biangbianghanzi.services.TRADITIONAL_CHINESE
@@ -18,6 +24,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalContext.current)) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var languageSelectExpanded by remember { mutableStateOf(false) }
 
@@ -99,6 +106,30 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
                 }
             }
 
+            // File issue
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Report a bug", style = MaterialTheme.typography.titleMedium)
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { openGitHubIssues(context) }
+                    ) {
+                        Text("Open GitHub Issues")
+                    }
+                    Button(
+                        onClick = { sendBugEmail(context) }
+                    ) {
+                        Text("Send Email")
+                    }
+                }
+            }
+
         }
     }
 
@@ -116,4 +147,31 @@ private fun chineseTypeLabel(value: String): String {
         TRADITIONAL_CHINESE -> "Traditional Chinese"
         else -> "Unknown"
     }
+}
+
+private fun openGitHubIssues(context: Context) {
+    val intent = Intent(
+        Intent.ACTION_VIEW,
+        "https://github.com/veeso/BiangBiang-Hanzi/issues/new".toUri()
+    )
+    context.startActivity(intent)
+}
+
+private fun sendBugEmail(context: Context) {
+    val intent = Intent(Intent.ACTION_SENDTO).apply {
+        val subject = "[Android] Bug report – BiangBiang Hanzi"
+        val text = """
+Description:
+
+Steps to reproduce:
+
+Device:
+Android version:
+"""
+        data = "mailto:info@veeso.dev?subject=${subject}&body=${text}".toUri()
+    }
+
+    context.startActivity(
+        Intent.createChooser(intent, "Send bug report")
+    )
 }

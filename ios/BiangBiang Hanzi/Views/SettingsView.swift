@@ -49,11 +49,54 @@ struct SettingsView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                 }
+
+                Section(
+                    header: HStack {
+                        Image(systemName: "ladybug")
+                        Text("Report a bug").font(.headline)
+                    }
+                ) {
+                    Button {
+                        openGitHubIssues()
+                    } label: {
+                        Label("Open a new issue on GitHub", systemImage: "link")
+                    }
+
+                    Button {
+                        sendBugEmail()
+                    } label: {
+                        Label("Invia una email", systemImage: "envelope")
+                    }
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline) // stile iOS classico
         }
     }
+}
+
+func openGitHubIssues() {
+    let webURL = URL(string: "https://github.com/veeso/BiangBiang-Hanzi/issues/new")!
+    UIApplication.shared.open(webURL)
+}
+
+func sendBugEmail() {
+    let subject = "[iOS] Bug report – BiangBiang Hanzi"
+    let body = """
+    Description:
+
+    Step to reproduce:
+
+    Device:
+    iOS version:
+    """
+    .replacingOccurrences(of: "\n", with: "\r\n")
+
+    let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    let url = URL(string: "mailto:info@veeso.dev?subject=\(encodedSubject)&body=\(encodedBody)")!
+    UIApplication.shared.open(url)
 }
 
 #Preview {
