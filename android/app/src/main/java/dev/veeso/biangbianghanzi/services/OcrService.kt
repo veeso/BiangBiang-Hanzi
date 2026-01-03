@@ -24,8 +24,7 @@ object OcrService {
     private val recognizer =
         TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
 
-    private val hanziRecognizer = HanziExtractor()
-    private val pinyinConverter = PinyinConverter()
+    private val textProcessor = TextProcessor()
 
     suspend fun recognizeHanzi(
         bitmap: Bitmap,
@@ -37,11 +36,10 @@ object OcrService {
             .flatMap { it.lines }
             .flatMap { it.elements }
             .mapNotNull { element ->
-                val hanzi = hanziRecognizer.extract(element.text) ?: return@mapNotNull null
-                val pinyin = pinyinConverter.hanziToPinyin(hanzi)
+                val pinyin = textProcessor.process(element.text) ?: return@mapNotNull null
                 element.boundingBox?.let { box ->
                     OcrBox(
-                        hanzi = hanzi,
+                        hanzi = element.text,
                         pinyin = pinyin,
                         left = box.left,
                         top = box.top,
@@ -65,8 +63,7 @@ class LiveOcrAnalyzer(
         ChineseTextRecognizerOptions.Builder().build()
     )
 
-    private val hanziRecognizer = HanziExtractor()
-    private val pinyinConverter = PinyinConverter()
+    private val textProcessor = TextProcessor()
 
     private var lastProcessedTime = 0L
 
@@ -93,11 +90,11 @@ class LiveOcrAnalyzer(
                     .flatMap { it.lines }
                     .flatMap { it.elements }
                     .mapNotNull { element ->
-                        val hanzi = hanziRecognizer.extract(element.text) ?: return@mapNotNull null
-                        val pinyin = pinyinConverter.hanziToPinyin(hanzi)
+                        val pinyin =
+                            textProcessor.process(element.text) ?: return@mapNotNull null
                         element.boundingBox?.let { box ->
                             OcrBox(
-                                hanzi = hanzi,
+                                hanzi = element.text,
                                 pinyin = pinyin,
                                 left = box.left,
                                 top = box.top,
