@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 
 Released on 03/01/2026
 
-- [Issue 10](https://github.com/veeso/BiangBiang-Hanzi/issues/10): Do not strip non hanzi characters from sentence that contains hanzi. For instance `我在NASA工作` caused converted text to be just `wǒ zài gōng zuò. xiàn zài shì diǎn.` instead of `wǒ zài NASA gōng zuò. xiàn zài shì 5 diǎn.`.
+- [Issue 10](https://github.com/veeso/BiangBiang-Hanzi/issues/10): Do not strip non hanzi characters from sentence that contains hanzi. For instance `我在NASA工作. 现在是5点.` caused converted text to be just `wǒ zài gōng zuò. xiàn zài shì diǎn.` instead of `wǒ zài NASA gōng zuò. xiàn zài shì 5 diǎn.`.
 
 ## 0.1.3
 

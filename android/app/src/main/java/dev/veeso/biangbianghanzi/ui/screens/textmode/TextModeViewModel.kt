@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
-import dev.veeso.biangbianghanzi.services.PinyinConverter
+import dev.veeso.biangbianghanzi.services.TextProcessor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -22,9 +22,11 @@ class TextModeViewModel : ViewModel() {
     private val _translatedText = MutableStateFlow("")
     val translatedText = _translatedText.asStateFlow()
 
+    val textProcessor = TextProcessor()
+
     fun onInputChanged(newText: String) {
         _inputText.value = newText
-        _pinyinText.value = PinyinConverter().hanziToPinyin(newText)
+        _pinyinText.value = textProcessor.hanziToPinyin(newText)
     }
 
     fun translate(userLanguage: String) {
