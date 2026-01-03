@@ -86,11 +86,10 @@ struct CameraModeView: View {
                         Spacer()
                         HStack {
                             if cameraModel.capturedImage != nil {
-                                Button(action: cameraModel.deleteCapturedImage)
-                                {
+                                Button(action: cameraModel.deleteCapturedImage) {
                                     Image(
                                         systemName:
-                                            "xmark.circle.fill"
+                                        "xmark.circle.fill"
                                     )
                                     .font(.system(size: 24))
                                     .foregroundColor(.white)
@@ -161,7 +160,6 @@ struct CameraModeView: View {
                                         .accessibilityLabel(
                                             "Scan photo from gallery"
                                         )
-
                                 }
                                 .onChange(of: selectedItem) { _, newItem in
                                     guard let newItem else { return }
@@ -225,7 +223,7 @@ struct CameraModeView: View {
                 // dynamic font size
                 let scaleRatio =
                     cameraModel.showPinyin
-                    ? CGFloat(hanzi.count) / CGFloat(pinyin.count) : 1.0
+                        ? CGFloat(hanzi.count) / CGFloat(pinyin.count) : 1.0
                 let scaleFactor = min(max(scaleRatio, 0.6), 1.0)
                 let fontSize = max(8, frame.height * scaleFactor)
                 let textToDisplay = cameraModel.showPinyin ? pinyin : hanzi
@@ -263,7 +261,7 @@ struct CameraModeView: View {
                                 )
                         )
                     }
-                    .buttonStyle(.plain)  // disable default blue style
+                    .buttonStyle(.plain) // disable default blue style
                     .frame(width: frame.width, height: frame.height)
                     .position(x: x, y: y)
                 }
@@ -314,11 +312,8 @@ struct CameraModeView: View {
 
                     let rect = CGRect(x: x, y: y, width: width, height: height)
                     return rect
-
                 }
-
             }
-
         }
     }
 

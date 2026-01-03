@@ -15,7 +15,7 @@ import Vision
 struct RecognizedTextBox: Identifiable {
     let id = UUID()
     let text: String
-    let boundingBox: CGRect  // Normalized (0-1)
+    let boundingBox: CGRect // Normalized (0-1)
 }
 
 @MainActor
@@ -42,6 +42,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
     private var textRequest: VNRecognizeTextRequest!
     var previewLayer: AVCaptureVideoPreviewLayer?
     private var lastProcessingTime = Date.distantPast
+    private let textProcessor = TextProcessor()
 
     /// Capture a photo and start task to recognize text
     func capturePhoto() {
@@ -50,19 +51,19 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
 
     /// Handle photo output
     func photoOutput(
-        _ output: AVCapturePhotoOutput,
+        _: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
-        error: Error?
+        error _: Error?
     ) {
         // called after taking photo
         guard let imageData = photo.fileDataRepresentation(),
-            let image = UIImage(data: imageData)
+              let image = UIImage(data: imageData)
         else { return }
         Task { @MainActor in
             // save image
             self.capturedImage = image
             // stop live feed
-            //self.session.stopRunning()
+            // self.session.stopRunning()
             // get text from image
             self.recognizeText(from: image)
         }
@@ -70,12 +71,12 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
 
     /// Capture live camera output
     func captureOutput(
-        _ output: AVCaptureOutput,
+        _: AVCaptureOutput,
         didOutput sampleBuffer: CMSampleBuffer,
-        from connection: AVCaptureConnection
+        from _: AVCaptureConnection
     ) {
         // do not capture if image is set underneath.
-        if self.capturedImage != nil { return }
+        if capturedImage != nil { return }
 
         let now = Date()
         guard now.timeIntervalSince(lastProcessingTime) > 1 else { return }
@@ -86,7 +87,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
 
         let orientation: CGImagePropertyOrientation = .up
 
-        let request = self.makeTextRecognitionRequest()
+        let request = makeTextRecognitionRequest()
 
         // Handler per questo frame
         let handler = VNImageRequestHandler(
@@ -101,7 +102,6 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         } catch {
             print("⚠️ Vision error:", error)
         }
-
     }
 
     /// Recognize and process text from a gallery image
@@ -267,7 +267,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
     private func makeTextRecognitionRequest() -> VNRecognizeTextRequest {
         let request = VNRecognizeTextRequest { [weak self] req, _ in
             guard let self,
-                let results = req.results as? [VNRecognizedTextObservation]
+                  let results = req.results as? [VNRecognizedTextObservation]
             else { return }
 
             let boxes: [RecognizedTextBox] = results.compactMap {
@@ -283,9 +283,8 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
                 self.recognizedTexts = boxes
                 self.pinyinMap.removeAll(keepingCapacity: true)
                 for box in boxes {
-                    if let hanzi = HanziExtractor().extract(text: box.text) {
-                        self.pinyinMap[box.id] = PinyinConverter()
-                            .hanziToPinyin(hanzi: hanzi)
+                    if let pinyin = self.textProcessor.process(text: box.text) {
+                        self.pinyinMap[box.id] = pinyin
                     }
                 }
             }
@@ -308,14 +307,9 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
     private func handleRecognizedTexts(_ texts: [RecognizedTextBox]) async {
         recognizedTexts = texts
         for text in texts {
-            let hanzi = HanziExtractor().extract(text: text.text)
-            if hanzi == nil {
-                continue
+            if let pinyin = textProcessor.process(text: text.text) {
+                pinyinMap[text.id] = pinyin
             }
-            pinyinMap[text.id] = PinyinConverter().hanziToPinyin(
-                hanzi: hanzi!
-            )
         }
     }
-
 }
