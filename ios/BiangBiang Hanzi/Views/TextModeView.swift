@@ -18,6 +18,8 @@ struct TextModeView: View {
     @State private var debounceTimer: AnyCancellable?
     @State private var translateConfig: TranslationSession.Configuration?
 
+    private var textProcessor: TextProcessor = .init()
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -70,7 +72,7 @@ struct TextModeView: View {
                         actionLabel: "Copy",
                         actionIcon: "doc.on.doc"
                     ) {
-                        copyToClipboard(pinyinText, )
+                        copyToClipboard(pinyinText)
                     } content: {
                         TextEditor(text: .constant(pinyinText))
                             .font(.title3)
@@ -90,7 +92,7 @@ struct TextModeView: View {
                             actionLabel: "Copy",
                             actionIcon: "doc.on.doc"
                         ) {
-                            copyToClipboard(translatedText, )
+                            copyToClipboard(translatedText)
                         } content: {
                             TextEditor(text: .constant(translatedText))
                                 .font(.title3)
@@ -104,7 +106,7 @@ struct TextModeView: View {
                         }
 
                         HStack {
-                            Spacer()  // push button to right
+                            Spacer() // push button to right
 
                             Button {
                                 Task { triggerTranslation() }
@@ -116,7 +118,6 @@ struct TextModeView: View {
                                     .background(Color.accentColor)
                                     .foregroundColor(.white)
                                     .clipShape(Capsule())
-
                             }
                             .translationTask(translateConfig) { session in
                                 do {
@@ -133,7 +134,6 @@ struct TextModeView: View {
                             }
                             .help("Translate")
                         }
-
                     }
                     .padding(.horizontal, 20)
                 }
@@ -176,15 +176,14 @@ struct TextModeView: View {
 
         Task {
             // 1. Convert to pinyin
-            pinyinText = PinyinConverter().hanziToPinyin(hanzi: inputText)
+            pinyinText = textProcessor.process(text: inputText) ?? ""
         }
     }
 
-    private func copyToClipboard(_ text: String, ) {
+    private func copyToClipboard(_ text: String) {
         guard !text.isEmpty else { return }
         UIPasteboard.general.string = text
     }
-
 }
 
 private struct SectionView<Content: View>: View {

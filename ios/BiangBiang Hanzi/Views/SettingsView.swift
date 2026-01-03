@@ -51,7 +51,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)  // stile iOS classico
+            .navigationBarTitleDisplayMode(.inline) // stile iOS classico
         }
     }
 }
