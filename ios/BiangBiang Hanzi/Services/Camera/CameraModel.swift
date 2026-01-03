@@ -263,7 +263,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         }
     }
 
-    /// Makde the text recognition request for OCR
+    /// Make the text recognition request for OCR
     private func makeTextRecognitionRequest() -> VNRecognizeTextRequest {
         let request = VNRecognizeTextRequest { [weak self] req, _ in
             guard let self,

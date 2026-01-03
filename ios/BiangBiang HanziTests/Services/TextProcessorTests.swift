@@ -47,4 +47,11 @@ struct TestProcessorTests {
         let processedText = TextProcessor().process(text: text)
         #expect(processedText == expectedText)
     }
+
+    @Test func shouldProcessSingleCharacters() throws {
+        let text = "王"
+        let expectedText = "wáng"
+        let processedText = TextProcessor().process(text: text)
+        #expect(processedText == expectedText)
+    }
 }
