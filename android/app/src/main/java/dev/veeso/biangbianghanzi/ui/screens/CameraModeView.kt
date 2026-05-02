@@ -17,9 +17,7 @@ import androidx.camera.core.ZoomState
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -230,37 +228,26 @@ fun CameraModeView() {
                     boxes = liveOcrBoxes,
                     imageWidth = frameWidth,
                     imageHeight = frameHeight,
-                    modifier = Modifier.fillMaxSize(),
-                    isLive = true,
-                    showPinyin = convertToPinyin,
-                )
-                // Top-most pinch overlay. Uses awaitEachGesture so single-finger
-                // taps propagate to OcrOverlay below for tap-to-copy; only
-                // multi-finger zoom events are consumed.
-                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(requireUnconsumed = false)
-                                do {
-                                    val event = awaitPointerEvent()
-                                    if (event.changes.size >= 2) {
-                                        val zoom = event.calculateZoom()
-                                        if (zoom != 1f) {
-                                            val clamped = clampZoom(
-                                                zoomRatio * zoom,
-                                                1f,
-                                                maxZoom,
-                                            )
-                                            cameraController.setZoomRatio(clamped)
-                                            zoomRatio = clamped
-                                            event.changes.forEach { it.consume() }
-                                        }
-                                    }
-                                } while (event.changes.any { it.pressed })
+                            // Pinch-to-zoom. Chained alongside OcrOverlay's
+                            // detectTapGestures — both can coexist because
+                            // detectTransformGestures waits for 2+ pointers.
+                            detectTransformGestures { _, _, gestureZoom, _ ->
+                                if (gestureZoom != 1f) {
+                                    val clamped = clampZoom(
+                                        zoomRatio * gestureZoom,
+                                        1f,
+                                        maxZoom,
+                                    )
+                                    cameraController.setZoomRatio(clamped)
+                                    zoomRatio = clamped
+                                }
                             }
                         },
+                    isLive = true,
+                    showPinyin = convertToPinyin,
                 )
             } else {
                 Image(
