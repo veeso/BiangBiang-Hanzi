@@ -8,21 +8,19 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.view.LifecycleCameraController
 import androidx.core.content.ContextCompat
 import java.io.File
 
-
 fun capturePhoto(
     context: Context,
-    imageCapture: ImageCapture,
-    onPhotoCaptured: (Bitmap?) -> Unit
+    controller: LifecycleCameraController,
+    onPhotoCaptured: (Bitmap?) -> Unit,
 ) {
-
     val photoFile = File(context.cacheDir, "capture.jpg")
     val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
-    // take picture async
-    imageCapture.takePicture(
+    controller.takePicture(
         outputOptions,
         ContextCompat.getMainExecutor(context),
         object : ImageCapture.OnImageSavedCallback {
@@ -47,6 +45,6 @@ fun capturePhoto(
                     onPhotoCaptured(null)
                 }
             }
-        }
+        },
     )
 }
