@@ -14,3 +14,6 @@ Pods/
 
 # Others
 .DS_Store
+
+# Claude
+.claude/
