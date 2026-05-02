@@ -65,7 +65,7 @@ struct SettingsView: View {
                     Button {
                         sendBugEmail()
                     } label: {
-                        Label("Invia una email", systemImage: "envelope")
+                        Label("Send an email", systemImage: "envelope")
                     }
                 }
             }
