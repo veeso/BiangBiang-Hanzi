@@ -172,8 +172,7 @@ fun CameraModeView() {
     // SurfaceView consumes touches otherwise.
     val previewContainer = remember {
         object : FrameLayout(context) {
-            override fun onInterceptTouchEvent(ev: MotionEvent): Boolean =
-                ev.pointerCount > 1
+            override fun onInterceptTouchEvent(ev: MotionEvent): Boolean = true
         }.apply {
             addView(
                 previewView,
