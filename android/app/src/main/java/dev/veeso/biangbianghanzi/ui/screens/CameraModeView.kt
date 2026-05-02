@@ -5,7 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
+import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -161,6 +164,24 @@ fun CameraModeView() {
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
             scaleType = PreviewView.ScaleType.FILL_CENTER
             controller = cameraController
+        }
+    }
+
+    // Wrap PreviewView in a FrameLayout that intercepts multi-touch so the
+    // ScaleGestureDetector receives pinch events. PreviewView's internal
+    // SurfaceView consumes touches otherwise.
+    val previewContainer = remember {
+        object : FrameLayout(context) {
+            override fun onInterceptTouchEvent(ev: MotionEvent): Boolean =
+                ev.pointerCount > 1
+        }.apply {
+            addView(
+                previewView,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
+            )
             setOnTouchListener { _, event ->
                 scaleGestureDetector.onTouchEvent(event)
                 true
@@ -200,7 +221,7 @@ fun CameraModeView() {
             if (capturedImage == null) {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
-                    factory = { previewView },
+                    factory = { previewContainer },
                 )
                 OcrOverlay(
                     boxes = liveOcrBoxes,
