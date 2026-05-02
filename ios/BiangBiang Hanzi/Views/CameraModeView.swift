@@ -48,6 +48,7 @@ struct CameraModeView: View {
     private struct CameraLiveView: View {
         @ObservedObject var cameraModel: CameraModel
         @State private var selectedItem: PhotosPickerItem?
+        @State private var pinchBaseZoom: CGFloat = 1.0
 
         var body: some View {
             GeometryReader { geo in
@@ -84,51 +85,69 @@ struct CameraModeView: View {
                     Spacer()
                     VStack {
                         Spacer()
+                        if cameraModel.capturedImage == nil && !cameraModel.availableZoomPresets.isEmpty {
+                            HStack(spacing: 12) {
+                                ForEach(cameraModel.availableZoomPresets, id: \.self) { preset in
+                                    let isActive = abs(cameraModel.zoomFactor - preset) < 0.05
+                                    Button(action: {
+                                        cameraModel.setZoom(preset)
+                                        pinchBaseZoom = preset
+                                    }) {
+                                        Text("\(Int(preset))x")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(.white)
+                                            .frame(width: 36, height: 36)
+                                            .background(
+                                                Circle()
+                                                    .fill(isActive ? Color.red.opacity(0.85) : Color.gray.opacity(0.6))
+                                                    .shadow(radius: 3)
+                                            )
+                                            .accessibilityLabel("Zoom \(Int(preset))x")
+                                    }
+                                }
+                            }
+                            .padding(.bottom, 12)
+                        }
                         HStack {
                             if cameraModel.capturedImage != nil {
                                 Button(action: cameraModel.deleteCapturedImage) {
-                                    Image(
-                                        systemName:
-                                        "xmark.circle.fill"
-                                    )
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(
-                                        Circle()
-                                            .fill(.gray)
-                                            .shadow(radius: 4)
-                                    )
-                                    .accessibilityLabel("Retake photo")
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(
+                                            Circle()
+                                                .fill(.gray)
+                                                .shadow(radius: 4)
+                                        )
+                                        .accessibilityLabel("Retake photo")
                                 }
                             } else {
                                 // Toggle Hanzi/Pinyin
                                 Button(action: {
                                     cameraModel.showPinyin.toggle()
                                 }) {
-                                    Image(
-                                        "BiangBiang"
-                                    )
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 28, height: 28)
-                                    .font(.system(size: 24, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(
-                                        Circle()
-                                            .fill(
-                                                cameraModel.showPinyin
-                                                    ? .red.opacity(0.8)
-                                                    : .gray.opacity(0.8)
-                                            )
-                                            .shadow(radius: 4)
-                                    )
-                                    .animation(
-                                        .easeInOut(duration: 0.2),
-                                        value: cameraModel.showPinyin
-                                    )
-                                    .accessibilityLabel("Toggle Pinyin")
+                                    Image("BiangBiang")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 28, height: 28)
+                                        .font(.system(size: 24, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(
+                                            Circle()
+                                                .fill(
+                                                    cameraModel.showPinyin
+                                                        ? .red.opacity(0.8)
+                                                        : .gray.opacity(0.8)
+                                                )
+                                                .shadow(radius: 4)
+                                        )
+                                        .animation(
+                                            .easeInOut(duration: 0.2),
+                                            value: cameraModel.showPinyin
+                                        )
+                                        .accessibilityLabel("Toggle Pinyin")
                                 }
                                 Button(action: cameraModel.capturePhoto) {
                                     Image(systemName: "camera.fill")
@@ -157,23 +176,15 @@ struct CameraModeView: View {
                                                 .fill(.gray)
                                                 .shadow(radius: 4)
                                         )
-                                        .accessibilityLabel(
-                                            "Scan photo from gallery"
-                                        )
+                                        .accessibilityLabel("Scan photo from gallery")
                                 }
                                 .onChange(of: selectedItem) { _, newItem in
                                     guard let newItem else { return }
                                     Task {
-                                        // Load as Data and build UIImage
-                                        if let data =
-                                            try? await newItem.loadTransferable(
-                                                type: Data.self
-                                            ),
-                                            let image = UIImage(data: data)
+                                        if let data = try? await newItem.loadTransferable(type: Data.self),
+                                           let image = UIImage(data: data)
                                         {
-                                            cameraModel.recognizeGalleryImage(
-                                                image
-                                            )
+                                            cameraModel.recognizeGalleryImage(image)
                                         }
                                         // reset selection to allow re-selecting same photo
                                         selectedItem = nil
@@ -198,7 +209,17 @@ struct CameraModeView: View {
                             .alignmentGuide(.bottom) { d in d[.bottom] }
                     }
                 }
-            }.task {
+            }
+            .simultaneousGesture(
+                MagnificationGesture()
+                    .onChanged { value in
+                        cameraModel.setZoom(pinchBaseZoom * value)
+                    }
+                    .onEnded { _ in
+                        pinchBaseZoom = cameraModel.zoomFactor
+                    }
+            )
+            .task {
                 await cameraModel.checkPermissionsAndStart()
             }
         }
