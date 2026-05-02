@@ -5,12 +5,11 @@
 //  Created by christian visintin on 31/10/25.
 //
 
+@testable import BiangBiang_Hanzi
 import Testing
 
-@testable import BiangBiang_Hanzi
-
 struct BiangBiang_HanziTests {
-    @Test func example() async throws {
+    @Test func example() {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.
     }
 }
