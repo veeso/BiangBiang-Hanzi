@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
+import android.view.ScaleGestureDetector
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,7 +14,6 @@ import androidx.camera.core.ZoomState
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -139,11 +138,33 @@ fun CameraModeView() {
         onDispose { cameraController.zoomState.removeObserver(observer) }
     }
 
+    fun applyZoom(newZoom: Float) {
+        val clamped = clampZoom(newZoom, 1f, maxZoom)
+        cameraController.setZoomRatio(clamped)
+        zoomRatio = clamped
+    }
+
+    val scaleGestureDetector = remember {
+        ScaleGestureDetector(
+            context,
+            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    applyZoom(zoomRatio * detector.scaleFactor)
+                    return true
+                }
+            },
+        )
+    }
+
     val previewView = remember {
         PreviewView(context).apply {
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
             scaleType = PreviewView.ScaleType.FILL_CENTER
             controller = cameraController
+            setOnTouchListener { _, event ->
+                scaleGestureDetector.onTouchEvent(event)
+                true
+            }
         }
     }
 
@@ -170,12 +191,6 @@ fun CameraModeView() {
         }
     }
 
-    fun applyZoom(newZoom: Float) {
-        val clamped = clampZoom(newZoom, 1f, maxZoom)
-        cameraController.setZoomRatio(clamped)
-        zoomRatio = clamped
-    }
-
     Scaffold { innerPadding ->
         Box(
             modifier = Modifier
@@ -184,13 +199,7 @@ fun CameraModeView() {
         ) {
             if (capturedImage == null) {
                 AndroidView(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(maxZoom) {
-                            detectTransformGestures { _, _, gestureZoom, _ ->
-                                applyZoom(zoomRatio * gestureZoom)
-                            }
-                        },
+                    modifier = Modifier.fillMaxSize(),
                     factory = { previewView },
                 )
                 OcrOverlay(
