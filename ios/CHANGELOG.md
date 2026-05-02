@@ -3,10 +3,17 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.3.0](#030)
   - [0.2.0](#020)
   - [0.1.3](#013)
   - [0.1.2](#012)
   - [0.1.1](#011)
+
+## 0.3.0
+
+Released on 02/05/2026
+
+- [Issue 13](https://github.com/veeso/BiangBiang-Hanzi/issues/13): Camera controls. Pinch-to-zoom and 1x/2x/5x preset buttons in the camera view, with automatic lens switching on devices with multiple back cameras (triple/dual).
 
 ## 0.2.0
 
