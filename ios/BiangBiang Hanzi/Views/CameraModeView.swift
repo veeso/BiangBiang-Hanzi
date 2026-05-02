@@ -96,14 +96,14 @@ struct CameraModeView: View {
                                         Text("\(Int(preset))x")
                                             .font(.system(size: 14, weight: .semibold))
                                             .foregroundColor(.white)
-                                            .frame(width: 36, height: 36)
+                                            .frame(width: 44, height: 44)
                                             .background(
                                                 Circle()
                                                     .fill(isActive ? Color.red.opacity(0.85) : Color.gray.opacity(0.6))
                                                     .shadow(radius: 3)
                                             )
-                                            .accessibilityLabel("Zoom \(Int(preset))x")
                                     }
+                                    .accessibilityLabel("Zoom \(Int(preset))x")
                                 }
                             }
                             .padding(.bottom, 12)
