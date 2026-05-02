@@ -5,49 +5,68 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
-import android.widget.Toast
-import androidx.camera.view.PreviewView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.LifecycleCameraController
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lens
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.veeso.biangbianghanzi.R
 import dev.veeso.biangbianghanzi.capturePhoto
 import dev.veeso.biangbianghanzi.services.LiveOcrAnalyzer
 import dev.veeso.biangbianghanzi.services.OcrBox
 import dev.veeso.biangbianghanzi.services.OcrService
+import dev.veeso.biangbianghanzi.services.availablePresets
+import dev.veeso.biangbianghanzi.services.clampZoom
 import dev.veeso.biangbianghanzi.ui.screens.camera.OcrOverlay
-
 
 @Composable
 fun CameraModeView() {
-
-    // states
     var frameWidth by remember { mutableIntStateOf(1) }
     var frameHeight by remember { mutableIntStateOf(1) }
     var convertToPinyin by remember { mutableStateOf(true) }
@@ -56,9 +75,12 @@ fun CameraModeView() {
     val ocrBoxes = remember { mutableStateListOf<OcrBox>() }
     val liveOcrBoxes = remember { mutableStateListOf<OcrBox>() }
 
+    var zoomRatio by remember { mutableFloatStateOf(1f) }
+    var maxZoom by remember { mutableFloatStateOf(1f) }
+    var presets by remember { mutableStateOf(listOf(1f)) }
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
 
     val analyzer = remember {
         LiveOcrAnalyzer(
@@ -81,12 +103,10 @@ fun CameraModeView() {
         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    // --- CameraX controller bound to lifecycle ---
     val cameraController = remember {
         LifecycleCameraController(context).apply {
             setEnabledUseCases(
                 LifecycleCameraController.IMAGE_CAPTURE or
-                        LifecycleCameraController.VIDEO_CAPTURE or
                         LifecycleCameraController.IMAGE_ANALYSIS
             )
             imageCaptureMode = ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
@@ -96,8 +116,23 @@ fun CameraModeView() {
     LaunchedEffect(cameraController) {
         cameraController.setImageAnalysisAnalyzer(
             ContextCompat.getMainExecutor(context),
-            analyzer
+            analyzer,
         )
+    }
+
+    LaunchedEffect(hasCameraPermission) {
+        if (hasCameraPermission) {
+            cameraController.bindToLifecycle(lifecycleOwner)
+        }
+    }
+
+    LaunchedEffect(cameraController) {
+        val observer = Observer<androidx.camera.core.ZoomState> { state ->
+            maxZoom = state.maxZoomRatio
+            presets = availablePresets(maxZoom = maxZoom)
+            zoomRatio = state.zoomRatio
+        }
+        cameraController.zoomState.observe(lifecycleOwner, observer)
     }
 
     val previewView = remember {
@@ -108,62 +143,18 @@ fun CameraModeView() {
         }
     }
 
-    // add effect on captured image to do OCR
     LaunchedEffect(capturedImage) {
-        // always clear
         ocrBoxes.clear()
         capturedImage?.let { bitmap ->
-            ocrBoxes.addAll(OcrService.recognizeHanzi(bitmap));
+            ocrBoxes.addAll(OcrService.recognizeHanzi(bitmap))
         }
     }
 
-    val imageCapture = remember {
-        ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .build()
-    }
-
-    LaunchedEffect(cameraController) {
-        previewView.controller = cameraController
-    }
-
-    LaunchedEffect(hasCameraPermission) {
-        if (!hasCameraPermission) return@LaunchedEffect
-
-        val cameraProvider = ProcessCameraProvider.getInstance(context).get()
-        val preview = Preview.Builder().build().also {
-            it.surfaceProvider = previewView.surfaceProvider
-        }
-
-        val analysis = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            .also {
-                it.setAnalyzer(ContextCompat.getMainExecutor(context), analyzer)
-            }
-
-        try {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                imageCapture,
-                analysis
-            )
-        } catch (exc: Exception) {
-            exc.printStackTrace()
-        }
-    }
-
-
-    // --- Gallery picker (Photo Picker) ---
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let { it ->
             runCatching {
-                // decode URI -> Bitmap
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     val source = ImageDecoder.createSource(context.contentResolver, it)
                     ImageDecoder.decodeBitmap(source)
@@ -175,17 +166,28 @@ fun CameraModeView() {
         }
     }
 
-    Scaffold() { innerPadding ->
+    fun applyZoom(newZoom: Float) {
+        val clamped = clampZoom(newZoom, 1f, maxZoom)
+        cameraController.setZoomRatio(clamped)
+        zoomRatio = clamped
+    }
+
+    Scaffold { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
             if (capturedImage == null) {
-                // Camera preview layer
                 AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { previewView }
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(maxZoom) {
+                            detectTransformGestures { _, _, gestureZoom, _ ->
+                                applyZoom(zoomRatio * gestureZoom)
+                            }
+                        },
+                    factory = { previewView },
                 )
                 OcrOverlay(
                     boxes = liveOcrBoxes,
@@ -193,15 +195,14 @@ fun CameraModeView() {
                     imageHeight = frameHeight,
                     modifier = Modifier.fillMaxSize(),
                     isLive = true,
-                    showPinyin = convertToPinyin
+                    showPinyin = convertToPinyin,
                 )
             } else {
-                // show captured image
                 Image(
                     bitmap = capturedImage!!.asImageBitmap(),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Fit,
                 )
 
                 OcrOverlay(
@@ -210,10 +211,9 @@ fun CameraModeView() {
                     imageHeight = capturedImage!!.height,
                     modifier = Modifier.fillMaxSize(),
                     isLive = false,
-                    showPinyin = convertToPinyin
+                    showPinyin = convertToPinyin,
                 )
 
-                // reset button
                 FilledTonalIconButton(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -225,75 +225,103 @@ fun CameraModeView() {
                 }
             }
 
-            // menu
             if (capturedImage == null) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = 20.dp),
                     verticalArrangement = Arrangement.Bottom,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    if (presets.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            presets.forEach { preset ->
+                                val isActive = kotlin.math.abs(zoomRatio - preset) < 0.05f
+                                FilledTonalIconButton(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .padding(horizontal = 4.dp),
+                                    onClick = { applyZoom(preset) },
+                                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                        containerColor =
+                                            if (isActive) Color(0xFFDE2910) else Color.Unspecified,
+                                        contentColor =
+                                            if (isActive) Color.White else Color.Unspecified,
+                                    ),
+                                ) {
+                                    Text(
+                                        text = "${preset.toInt()}x",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
+                        }
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Toggle Hanzi conversion (quick)
                         FilledTonalIconButton(
                             modifier = Modifier.size(48.dp),
                             onClick = { convertToPinyin = !convertToPinyin },
                             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = if (convertToPinyin) Color(0xFFDE2910) else Color.Unspecified,
-                                contentColor = if (convertToPinyin) Color.White else Color.Unspecified
+                                containerColor =
+                                    if (convertToPinyin) Color(0xFFDE2910) else Color.Unspecified,
+                                contentColor =
+                                    if (convertToPinyin) Color.White else Color.Unspecified,
                             ),
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.logo_button_ico),
                                 contentDescription = "Toggle Hanzi conversion",
-                                modifier = Modifier.padding(8.dp)
-
+                                modifier = Modifier.padding(8.dp),
                             )
                         }
 
-                        // Shutter (bigger)
                         FilledIconButton(
                             modifier = Modifier.size(72.dp),
                             onClick = {
-                                if (hasCameraPermission) capturePhoto(
-                                    context,
-                                    imageCapture
-                                ) { bitmap ->
-                                    capturedImage = bitmap
+                                if (hasCameraPermission) {
+                                    capturePhoto(context, cameraController) { bitmap ->
+                                        capturedImage = bitmap
+                                    }
+                                } else {
+                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                 }
-                                else cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                             },
-                            shape = CircleShape
+                            shape = CircleShape,
                         ) {
                             Icon(
                                 Icons.Default.Lens,
                                 contentDescription = "Shutter",
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(40.dp),
                             )
                         }
 
-                        // Pick from gallery
                         FilledTonalIconButton(
                             modifier = Modifier.size(48.dp),
                             onClick = {
                                 galleryLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly,
+                                    ),
                                 )
-                            }
+                            },
                         ) {
                             Icon(Icons.Default.Image, contentDescription = "Pick from gallery")
                         }
                     }
                 }
             }
-
         }
     }
 }
