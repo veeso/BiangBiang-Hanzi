@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ZoomState
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
@@ -33,6 +34,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -64,6 +66,7 @@ import dev.veeso.biangbianghanzi.services.OcrService
 import dev.veeso.biangbianghanzi.services.availablePresets
 import dev.veeso.biangbianghanzi.services.clampZoom
 import dev.veeso.biangbianghanzi.ui.screens.camera.OcrOverlay
+import kotlin.math.abs
 
 @Composable
 fun CameraModeView() {
@@ -126,13 +129,14 @@ fun CameraModeView() {
         }
     }
 
-    LaunchedEffect(cameraController) {
-        val observer = Observer<androidx.camera.core.ZoomState> { state ->
+    DisposableEffect(cameraController, lifecycleOwner) {
+        val observer = Observer<ZoomState> { state ->
             maxZoom = state.maxZoomRatio
             presets = availablePresets(maxZoom = maxZoom)
             zoomRatio = state.zoomRatio
         }
         cameraController.zoomState.observe(lifecycleOwner, observer)
+        onDispose { cameraController.zoomState.removeObserver(observer) }
     }
 
     val previewView = remember {
@@ -241,7 +245,7 @@ fun CameraModeView() {
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             presets.forEach { preset ->
-                                val isActive = kotlin.math.abs(zoomRatio - preset) < 0.05f
+                                val isActive = abs(zoomRatio - preset) < 0.05f
                                 FilledTonalIconButton(
                                     modifier = Modifier
                                         .size(44.dp)
