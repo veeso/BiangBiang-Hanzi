@@ -26,19 +26,23 @@ You can purchase 𰻝𰻝汉子 BiangBiang Hanzi from the App Store and from the
 [![App Store](./assets/app_store_badge.png)](https://apps.apple.com/app/id6754869174)
 [![Google Play](./assets/google_play_badge.png)](https://play.google.com/store/apps/details?id=dev.veeso.biangbianghanzi)
 
+## Required Tools
+
+- [`swiftformat`](https://github.com/nicklockwood/SwiftFormat) — required for formatting iOS Swift code. Install via Homebrew:
+
+  ```bash
+  brew install swiftformat
+  ```
+
 ## iOS
 
-Install `swiftformat` using Homebrew:
-
-```bash
-brew install swiftformat
-```
-
-and format code using
+Format code using
 
 ```bash
 swiftformat ./ios
 ```
+
+Run `swiftformat ./ios` whenever iOS code is modified.
 
 ## License
 

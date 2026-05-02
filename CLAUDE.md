@@ -13,7 +13,7 @@ BiangBiang Hanzi is a dual-platform native mobile app (iOS + Android) that conve
 - **Open project:** `open "ios/BiangBiang Hanzi.xcodeproj"`
 - **Build:** Xcode ⌘B or `xcodebuild -project "ios/BiangBiang Hanzi.xcodeproj" -scheme "BiangBiang Hanzi" build`
 - **Run tests:** `xcodebuild test -project "ios/BiangBiang Hanzi.xcodeproj" -scheme "BiangBiang Hanzi" -destination 'platform=iOS Simulator,name=iPhone 16'`
-- **Format code:** `swiftformat ./ios` (requires `brew install swiftformat`)
+- **Format code:** `swiftformat ./ios` (requires `brew install swiftformat`). **Run this whenever iOS code is modified.**
 
 ### Android (Kotlin + Jetpack Compose)
 
