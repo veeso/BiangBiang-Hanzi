@@ -178,6 +178,8 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         configureSession()
         // Start running on a background thread
         await startCaptureSession()
+        // Re-apply initial zoom: addInput resets videoZoomFactor on some devices.
+        setZoom(1.0)
     }
 
     private func configureSession() {
