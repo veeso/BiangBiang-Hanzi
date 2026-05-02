@@ -247,7 +247,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         }
     }
 
-    // Start the session off the main thread
+    /// Start the session off the main thread
     private func startCaptureSession() async {
         await withCheckedContinuation { continuation in
             Task.detached { [weak self] in

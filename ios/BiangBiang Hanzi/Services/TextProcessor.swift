@@ -83,7 +83,7 @@ class TextProcessor {
         return result.trimmingCharacters(in: .whitespaces)
     }
 
-    // Given a `text` tells whether the text contains hanzi
+    /// Given a `text` tells whether the text contains hanzi
     func containsHanzi(text: String) -> Bool {
         let range = NSRange(text.startIndex..., in: text)
         return regex.firstMatch(in: text, range: range) != nil

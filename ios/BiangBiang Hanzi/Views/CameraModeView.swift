@@ -310,8 +310,7 @@ struct CameraModeView: View {
                     let width = rect.width * viewWidth
                     let height = rect.height * viewHeight
 
-                    let rect = CGRect(x: x, y: y, width: width, height: height)
-                    return rect
+                    return CGRect(x: x, y: y, width: width, height: height)
                 }
             }
         }
