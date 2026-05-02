@@ -219,6 +219,11 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
                 device.focusMode = .autoFocus
             }
 
+            // Near focus (helps macro / close-up text scanning)
+            if device.isAutoFocusRangeRestrictionSupported {
+                device.autoFocusRangeRestriction = .near
+            }
+
             // Continuous AF
             if device.isFocusModeSupported(.continuousAutoFocus) {
                 device.focusMode = .continuousAutoFocus
