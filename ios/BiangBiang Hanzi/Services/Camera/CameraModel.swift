@@ -35,6 +35,17 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
     /// Show copied toast
     @Published var showCopiedToast: Bool = false
 
+    /// Currently active capture device. Used for zoom configuration.
+    private var device: AVCaptureDevice?
+    /// UI-facing zoom factor (1.0 == standard wide lens).
+    @Published var zoomFactor: CGFloat = 1.0
+    /// Presets available on the active device.
+    @Published var availableZoomPresets: [CGFloat] = []
+    /// Switch-over factor mapping UI zoom → device.videoZoomFactor (1.0 if no virtual switch).
+    private var zoomSwitchOverFactor: CGFloat = 1.0
+    /// Maximum UI zoom supported by the active device.
+    private var maxUIZoom: CGFloat = 1.0
+
     let session = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let output = AVCapturePhotoOutput()
@@ -173,22 +184,25 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         session.beginConfiguration()
         defer { session.commitConfiguration() }
 
-        let discovery = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInUltraWideCamera, .builtInWideAngleCamera],
+        let virtualDiscovery = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [
+                .builtInTripleCamera,
+                .builtInDualWideCamera,
+                .builtInDualCamera,
+                .builtInWideAngleCamera,
+            ],
             mediaType: .video,
             position: .back
         )
 
-        // Prefer ultra-wide for macro
         let device =
-            discovery.devices.first(where: {
-                $0.deviceType == .builtInUltraWideCamera
-            })
-            ?? discovery.devices.first(where: {
-                $0.deviceType == .builtInWideAngleCamera
-            })
+            virtualDiscovery.devices.first(where: { $0.deviceType == .builtInTripleCamera })
+                ?? virtualDiscovery.devices.first(where: { $0.deviceType == .builtInDualWideCamera })
+                ?? virtualDiscovery.devices.first(where: { $0.deviceType == .builtInDualCamera })
+                ?? virtualDiscovery.devices.first(where: { $0.deviceType == .builtInWideAngleCamera })
 
         guard let device else { return }
+        self.device = device
 
         // configure camera focus
         do {
@@ -205,11 +219,6 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
                 device.focusMode = .autoFocus
             }
 
-            // Near focus
-            if device.isAutoFocusRangeRestrictionSupported {
-                device.autoFocusRangeRestriction = .near
-            }
-
             // Continuous AF
             if device.isFocusModeSupported(.continuousAutoFocus) {
                 device.focusMode = .continuousAutoFocus
@@ -220,7 +229,26 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
                 device.exposureMode = .continuousAutoExposure
             }
 
+            let switchOvers = device.virtualDeviceSwitchOverVideoZoomFactors.map { CGFloat(truncating: $0) }
+            let switchOver = switchOvers.first ?? 1.0
+            zoomSwitchOverFactor = switchOver
+
+            let maxDeviceZoom = device.maxAvailableVideoZoomFactor
+            let maxUI = deviceZoomToUIZoom(maxDeviceZoom, switchOverFactor: switchOver)
+            maxUIZoom = maxUI
+
+            // Default to 1.0x (standard wide lens).
+            let initialDeviceZoom = uiZoomToDeviceZoom(1.0, switchOverFactor: switchOver)
+            device.videoZoomFactor = clampZoom(
+                initialDeviceZoom,
+                min: device.minAvailableVideoZoomFactor,
+                max: maxDeviceZoom
+            )
+
             device.unlockForConfiguration()
+
+            zoomFactor = 1.0
+            availableZoomPresets = availablePresets(maxUIZoom: maxUIZoom)
         } catch {
             print("⚠️ Failed to configure camera focus: \(error)")
         }
@@ -310,6 +338,26 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
             if let pinyin = textProcessor.process(text: text.text) {
                 pinyinMap[text.id] = pinyin
             }
+        }
+    }
+
+    /// Set the UI zoom factor. Clamps to the active device's range.
+    func setZoom(_ uiZoom: CGFloat) {
+        guard let device else { return }
+        let clampedUI = clampZoom(uiZoom, min: 1.0, max: maxUIZoom)
+        let deviceZoom = uiZoomToDeviceZoom(clampedUI, switchOverFactor: zoomSwitchOverFactor)
+        let clampedDevice = clampZoom(
+            deviceZoom,
+            min: device.minAvailableVideoZoomFactor,
+            max: device.maxAvailableVideoZoomFactor
+        )
+        do {
+            try device.lockForConfiguration()
+            device.videoZoomFactor = clampedDevice
+            device.unlockForConfiguration()
+            zoomFactor = clampedUI
+        } catch {
+            print("⚠️ Failed to set zoom: \(error)")
         }
     }
 }
