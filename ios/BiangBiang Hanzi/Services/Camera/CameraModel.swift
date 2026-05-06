@@ -6,8 +6,8 @@
 //
 
 import AVFoundation
-import Combine
 import Foundation
+import Observation
 import UIKit
 import Vision
 
@@ -19,41 +19,44 @@ struct RecognizedTextBox: Identifiable {
 }
 
 @MainActor
-class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
+@Observable
+final class CameraModel: NSObject, AVCapturePhotoCaptureDelegate,
     AVCaptureVideoDataOutputSampleBufferDelegate
 {
     /// Recognised text by camera
-    @Published var recognizedTexts: [RecognizedTextBox] = []
+    var recognizedTexts: [RecognizedTextBox] = []
     /// Map between the recognised text id and the pinyin for it
-    @Published var pinyinMap: [UUID: String] = [:]
+    var pinyinMap: [UUID: String] = [:]
     /// If the user captured an image, it will be saved here
-    @Published var capturedImage: UIImage? = nil
+    var capturedImage: UIImage?
     /// No camera permission
-    @Published var missingCameraPermission: Bool = false
+    var missingCameraPermission: Bool = false
     /// Whether to show pinyin instead of Hanzi in overlays
-    @Published var showPinyin: Bool = true
+    var showPinyin: Bool = true
     /// Show copied toast
-    @Published var showCopiedToast: Bool = false
+    var showCopiedToast: Bool = false
 
     /// Currently active capture device. Used for zoom configuration.
-    private var device: AVCaptureDevice?
+    @ObservationIgnored private var device: AVCaptureDevice?
     /// UI-facing zoom factor (1.0 == standard wide lens).
-    @Published var zoomFactor: CGFloat = 1.0
+    var zoomFactor: CGFloat = 1.0
     /// Presets available on the active device.
-    @Published var availableZoomPresets: [CGFloat] = []
+    var availableZoomPresets: [CGFloat] = []
     /// Switch-over factor mapping UI zoom → device.videoZoomFactor (1.0 if no virtual switch).
-    private var zoomSwitchOverFactor: CGFloat = 1.0
+    @ObservationIgnored private var zoomSwitchOverFactor: CGFloat = 1.0
     /// Maximum UI zoom supported by the active device.
-    private var maxUIZoom: CGFloat = 1.0
+    @ObservationIgnored private var maxUIZoom: CGFloat = 1.0
 
-    let session = AVCaptureSession()
-    private let videoOutput = AVCaptureVideoDataOutput()
-    private let output = AVCapturePhotoOutput()
-    private let queue = DispatchQueue(label: "camera.frame.processing")
-    private var textRequest: VNRecognizeTextRequest!
-    var previewLayer: AVCaptureVideoPreviewLayer?
-    private var lastProcessingTime = Date.distantPast
-    private let textProcessor = TextProcessor()
+    @ObservationIgnored let session = AVCaptureSession()
+    @ObservationIgnored private let videoOutput = AVCaptureVideoDataOutput()
+    @ObservationIgnored private let output = AVCapturePhotoOutput()
+    @ObservationIgnored private let queue = DispatchQueue(
+        label: "camera.frame.processing"
+    )
+    @ObservationIgnored private var textRequest: VNRecognizeTextRequest!
+    @ObservationIgnored var previewLayer: AVCaptureVideoPreviewLayer?
+    @ObservationIgnored private var lastProcessingTime = Date.distantPast
+    @ObservationIgnored private let textProcessor = TextProcessor()
 
     /// Capture a photo and start task to recognize text
     func capturePhoto() {
@@ -70,14 +73,8 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         guard let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData)
         else { return }
-        Task { @MainActor in
-            // save image
-            self.capturedImage = image
-            // stop live feed
-            // self.session.stopRunning()
-            // get text from image
-            self.recognizeText(from: image)
-        }
+        capturedImage = image
+        recognizeText(from: image)
     }
 
     /// Capture live camera output
@@ -96,18 +93,13 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
         else { return }
 
-        let orientation: CGImagePropertyOrientation = .up
-
         let request = makeTextRecognitionRequest()
-
-        // Handler per questo frame
         let handler = VNImageRequestHandler(
             cvPixelBuffer: pixelBuffer,
-            orientation: orientation,
+            orientation: .up,
             options: [:]
         )
 
-        // Esegui subito sulla queue del delegate (è già seriale), niente hop extra
         do {
             try handler.perform([request])
         } catch {
@@ -137,24 +129,21 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
             if granted {
                 await configureAndStartSession()
             } else {
-                await MainActor.run { self.missingCameraPermission = true }
+                missingCameraPermission = true
             }
         case .denied, .restricted:
             print(
                 "⚠️ Camera permission denied. Enable them on Settings > Privacy > Camera"
             )
-            await MainActor.run { self.missingCameraPermission = true }
+            missingCameraPermission = true
         @unknown default:
-            await MainActor.run { self.missingCameraPermission = true }
+            missingCameraPermission = true
         }
     }
 
     /// Delete the current captured image data.
     func deleteCapturedImage() {
-        Task { @MainActor in
-            // reset image
-            self.capturedImage = nil
-        }
+        capturedImage = nil
     }
 
     // Optional: stop session off the main thread when needed
@@ -313,8 +302,7 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
                 )
             }
 
-            // Aggiorna UI sul main, identico alla tua funzione che già funziona
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.recognizedTexts = boxes
                 self.pinyinMap.removeAll(keepingCapacity: true)
                 for box in boxes {
@@ -336,16 +324,6 @@ class CameraModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate,
         let request = makeTextRecognitionRequest()
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         try? handler.perform([request])
-    }
-
-    /// Function which processed the recognized texts to extract hanzi and get the pinyin.
-    private func handleRecognizedTexts(_ texts: [RecognizedTextBox]) async {
-        recognizedTexts = texts
-        for text in texts {
-            if let pinyin = textProcessor.process(text: text.text) {
-                pinyinMap[text.id] = pinyin
-            }
-        }
     }
 
     /// Set the UI zoom factor. Clamps to the active device's range.

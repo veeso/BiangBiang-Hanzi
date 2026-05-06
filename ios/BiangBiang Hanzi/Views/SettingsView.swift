@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @EnvironmentObject var settings: AppSettings
+    @Environment(AppSettings.self) private var settings
+    @Environment(\.openURL) private var openURL
 
-    let availableLanguages: [(id: String, name: String)] =
+    private static let availableLanguages: [(id: String, name: String)] =
         Locale.availableIdentifiers.map { id in
             (
                 id: id,
@@ -20,86 +21,80 @@ struct SettingsView: View {
         .sorted { $0.name < $1.name }
 
     var body: some View {
-        NavigationView {
+        @Bindable var settings = settings
+
+        NavigationStack {
             Form {
-                Section(
-                    header: HStack {
-                        Image(systemName: "globe")
-                        Text("Translation language")
-                    }
-                ) {
+                Section {
                     Picker("Language", selection: $settings.userLanguage) {
-                        ForEach(availableLanguages, id: \.id) { option in
+                        ForEach(Self.availableLanguages, id: \.id) { option in
                             Text(option.name).tag(option.id)
                         }
                     }
-                    .pickerStyle(MenuPickerStyle())
+                    .pickerStyle(.menu)
+                } header: {
+                    Label("Translation language", systemImage: "globe")
                 }
 
-                Section(
-                    header: HStack {
-                        Image(systemName: "textformat")
-                        Text("Chinese variant")
-                            .font(.headline)
-                    }
-                ) {
+                Section {
                     Picker("Variant", selection: $settings.chineseVariant) {
                         Text("Simplified").tag("zh-Hans")
                         Text("Traditional").tag("zh-Hant")
                     }
-                    .pickerStyle(SegmentedPickerStyle())
+                    .pickerStyle(.segmented)
+                } header: {
+                    Label("Chinese variant", systemImage: "textformat")
                 }
 
-                Section(
-                    header: HStack {
-                        Image(systemName: "ladybug")
-                        Text("Report a bug").font(.headline)
-                    }
-                ) {
-                    Button {
-                        openGitHubIssues()
-                    } label: {
-                        Label("Open a new issue on GitHub", systemImage: "link")
-                    }
-
-                    Button {
-                        sendBugEmail()
-                    } label: {
-                        Label("Send an email", systemImage: "envelope")
-                    }
+                Section {
+                    Button(
+                        "Open a new issue on GitHub",
+                        systemImage: "link",
+                        action: openGitHubIssues
+                    )
+                    Button(
+                        "Send an email",
+                        systemImage: "envelope",
+                        action: sendBugEmail
+                    )
+                } header: {
+                    Label("Report a bug", systemImage: "ladybug")
                 }
             }
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline) // stile iOS classico
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
-}
 
-func openGitHubIssues() {
-    let webURL = URL(string: "https://github.com/veeso/BiangBiang-Hanzi/issues/new")!
-    UIApplication.shared.open(webURL)
-}
+    private func openGitHubIssues() {
+        guard let url = URL(string: "https://github.com/veeso/BiangBiang-Hanzi/issues/new") else {
+            return
+        }
+        openURL(url)
+    }
 
-func sendBugEmail() {
-    let subject = "[iOS] Bug report – BiangBiang Hanzi"
-    let body = """
-    Description:
+    private func sendBugEmail() {
+        let subject = "[iOS] Bug report – BiangBiang Hanzi"
+        let body = """
+        Description:
 
-    Step to reproduce:
+        Step to reproduce:
 
-    Device:
-    iOS version:
-    """
-    .replacingOccurrences(of: "\n", with: "\r\n")
+        Device:
+        iOS version:
+        """
+        .replacingOccurrences(of: "\n", with: "\r\n")
 
-    let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-    let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-
-    let url = URL(string: "mailto:info@veeso.dev?subject=\(encodedSubject)&body=\(encodedBody)")!
-    UIApplication.shared.open(url)
+        guard
+            let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            let url = URL(string: "mailto:info@veeso.dev?subject=\(encodedSubject)&body=\(encodedBody)")
+        else { return }
+        openURL(url)
+    }
 }
 
 #Preview {
     SettingsView()
-        .environmentObject(AppSettings())
+        .environment(AppSettings())
 }

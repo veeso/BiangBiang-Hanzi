@@ -8,27 +8,29 @@
 import SwiftUI
 
 struct ContentView: View {
+    enum AppTab: Hashable {
+        case text
+        case camera
+        case settings
+    }
+
+    @State private var selection: AppTab = .text
+
     var body: some View {
-        TabView {
-            TextModeView()
-                .tabItem {
-                    Label("Text", systemImage: "textformat")
-                }
-
-            CameraModeView()
-                .tabItem {
-                    Label("Camera", systemImage: "camera")
-                }
-
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
+        TabView(selection: $selection) {
+            Tab("Text", systemImage: "textformat", value: AppTab.text) {
+                TextModeView()
+            }
+            Tab("Camera", systemImage: "camera", value: AppTab.camera) {
+                CameraModeView()
+            }
+            Tab("Settings", systemImage: "gear", value: AppTab.settings) {
+                SettingsView()
+            }
         }
-        .navigationViewStyle(.stack)
     }
 }
 
 #Preview {
-    ContentView().environmentObject(AppSettings())
+    ContentView().environment(AppSettings())
 }
