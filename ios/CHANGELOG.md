@@ -3,11 +3,29 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.3.1](#031)
   - [0.3.0](#030)
   - [0.2.0](#020)
   - [0.1.3](#013)
   - [0.1.2](#012)
   - [0.1.1](#011)
+
+## 0.3.1
+
+Released on 06/05/2026
+
+- Modernized the SwiftUI codebase to iOS 17+ patterns:
+  - Migrated state from `ObservableObject` / `@Published` / `@StateObject` to `@Observable` + `@State` + `@Environment`.
+  - Replaced `NavigationView` with `NavigationStack` and switched the tab bar to the iOS 17 `Tab` API with an enum-typed selection.
+  - Replaced `MagnificationGesture`, `foregroundColor`, `cornerRadius` and `UIImpactFeedbackGenerator` with `MagnifyGesture`, `foregroundStyle`, `clipShape(.rect(...))` and `sensoryFeedback`.
+  - Replaced Combine `debounce` and `DispatchQueue.asyncAfter` with cancellable `Task` + `Task.sleep`.
+- Camera view polish:
+  - Split into dedicated `CameraPermissionView`, `CameraLiveView`, `RecognizedTextOverlay` and `CopyToast` views.
+  - Added a `ContentUnavailableView`-based permission screen with a deep link into Settings.
+- Text view polish:
+  - Replaced the read-only `TextEditor` with a `Text`-based `ReadOnlyTextBox` and switched the Hanzi input to `TextField(axis: .vertical)`.
+- Added a shared `AppDesign` enum with spacing, corner radii, animation durations and tap target constants used across views.
+- Fixed OCR overlays on gallery and captured photos rendering at the wrong size and position by mapping Vision's normalized box onto the displayed image's aspect-fit rect and passing the image orientation to the Vision request.
 
 ## 0.3.0
 
