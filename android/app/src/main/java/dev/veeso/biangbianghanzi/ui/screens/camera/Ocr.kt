@@ -3,8 +3,8 @@ package dev.veeso.biangbianghanzi.ui.screens.camera
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -21,8 +21,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -39,24 +41,25 @@ fun OcrOverlay(
     modifier: Modifier = Modifier,
     isLive: Boolean,
     showPinyin: Boolean,
+    onTextCopied: (() -> Unit)? = null,
 ) {
     val textMeasurer = rememberTextMeasurer()
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val fontFamily = typography.bodySmall.fontFamily
 
-    // highlight selected box
     var highlightedBox by remember { mutableStateOf<OcrBox?>(null) }
     val highlightAlpha by animateFloatAsState(
         targetValue = if (highlightedBox != null) 0.4f else 0f,
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300),
-        label = "highlightAlpha"
+        animationSpec = tween(durationMillis = 300),
+        label = "highlightAlpha",
     )
-    // reset highlight after delay
-    val resetHighlight =
-        LaunchedEffect(highlightedBox) {
+    LaunchedEffect(highlightedBox) {
+        if (highlightedBox != null) {
             delay(300)
             highlightedBox = null
         }
+    }
 
     val renderedBoxes = remember { mutableListOf<Pair<OcrBox, android.graphics.RectF>>() }
     renderedBoxes.clear()
@@ -73,9 +76,9 @@ fun OcrOverlay(
                         val clipboard =
                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("OCR text", text))
-                        Toast.makeText(context, "Text copied", Toast.LENGTH_SHORT).show()
-                        // trigger highlight
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         highlightedBox = box
+                        onTextCopied?.invoke()
                     }
                 }
             }

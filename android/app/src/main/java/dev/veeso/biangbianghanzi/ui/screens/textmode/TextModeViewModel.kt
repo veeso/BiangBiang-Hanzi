@@ -4,12 +4,17 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
 import dev.veeso.biangbianghanzi.services.TextProcessor
+import dev.veeso.biangbianghanzi.ui.AppDesign
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class TextModeViewModel : ViewModel() {
 
@@ -22,11 +27,26 @@ class TextModeViewModel : ViewModel() {
     private val _translatedText = MutableStateFlow("")
     val translatedText = _translatedText.asStateFlow()
 
-    val textProcessor = TextProcessor()
+    private val textProcessor = TextProcessor()
+    private var debounceJob: Job? = null
 
     fun onInputChanged(newText: String) {
         _inputText.value = newText
-        _pinyinText.value = textProcessor.hanziToPinyin(newText)
+        debounceJob?.cancel()
+        debounceJob = viewModelScope.launch {
+            delay(AppDesign.INPUT_DEBOUNCE_MS)
+            processInput()
+        }
+    }
+
+    private fun processInput() {
+        val text = _inputText.value
+        if (text.trim().isEmpty()) {
+            _pinyinText.value = ""
+            _translatedText.value = ""
+            return
+        }
+        _pinyinText.value = textProcessor.hanziToPinyin(text)
     }
 
     fun translate(userLanguage: String) {
@@ -40,7 +60,6 @@ class TextModeViewModel : ViewModel() {
 
         val translator = Translation.getClient(options)
 
-        // Download model if required
         translator.downloadModelIfNeeded()
             .addOnSuccessListener {
                 translator.translate(text)
@@ -57,8 +76,8 @@ class TextModeViewModel : ViewModel() {
     }
 
     fun copyToClipboard(context: Context, text: String) {
+        if (text.isEmpty()) return
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("text", text)
-        clipboard.setPrimaryClip(clip)
+        clipboard.setPrimaryClip(ClipData.newPlainText("text", text))
     }
 }
