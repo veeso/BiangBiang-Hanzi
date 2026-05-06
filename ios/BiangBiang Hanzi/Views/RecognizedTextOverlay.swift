@@ -158,6 +158,12 @@ struct RecognizedTextOverlay: View {
     /// flips the x-axis. TODO: drive Vision off the same orientation as the preview connection
     /// so this manual flip is no longer needed.
     private func visionToViewRect(_ rect: CGRect, in size: CGSize) -> CGRect {
+        // Captured/gallery image: map against the aspect-fit rect of the displayed image,
+        // not the preview layer (whose aspect ratio belongs to the live camera sensor).
+        if let image = cameraModel.capturedImage {
+            return imageRect(rect, image: image, in: size)
+        }
+
         if let previewLayer = cameraModel.previewLayer {
             let videoRect = previewLayer.layerRectConverted(
                 fromMetadataOutputRect: rect
@@ -176,6 +182,34 @@ struct RecognizedTextOverlay: View {
         let y = rect.midY * size.height
         let width = rect.width * size.width
         let height = rect.height * size.height
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+
+    /// Map Vision's normalized rect (bottom-left origin) onto the displayed
+    /// `scaledToFit` rect of `image` inside `viewSize`.
+    private func imageRect(
+        _ rect: CGRect,
+        image: UIImage,
+        in viewSize: CGSize
+    ) -> CGRect {
+        let imageSize = image.size
+        guard imageSize.width > 0, imageSize.height > 0,
+              viewSize.width > 0, viewSize.height > 0
+        else { return .zero }
+
+        let scale = min(
+            viewSize.width / imageSize.width,
+            viewSize.height / imageSize.height
+        )
+        let displayW = imageSize.width * scale
+        let displayH = imageSize.height * scale
+        let offsetX = (viewSize.width - displayW) * 0.5
+        let offsetY = (viewSize.height - displayH) * 0.5
+
+        let x = offsetX + rect.minX * displayW
+        let y = offsetY + (1 - rect.maxY) * displayH
+        let width = rect.width * displayW
+        let height = rect.height * displayH
         return CGRect(x: x, y: y, width: width, height: height)
     }
 }

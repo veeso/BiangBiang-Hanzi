@@ -322,8 +322,28 @@ final class CameraModel: NSObject, AVCapturePhotoCaptureDelegate,
     private func recognizeText(from image: UIImage) {
         guard let cgImage = image.cgImage else { return }
         let request = makeTextRecognitionRequest()
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        let handler = VNImageRequestHandler(
+            cgImage: cgImage,
+            orientation: cgOrientation(from: image.imageOrientation),
+            options: [:]
+        )
         try? handler.perform([request])
+    }
+
+    private func cgOrientation(
+        from uiOrientation: UIImage.Orientation
+    ) -> CGImagePropertyOrientation {
+        switch uiOrientation {
+        case .up: .up
+        case .down: .down
+        case .left: .left
+        case .right: .right
+        case .upMirrored: .upMirrored
+        case .downMirrored: .downMirrored
+        case .leftMirrored: .leftMirrored
+        case .rightMirrored: .rightMirrored
+        @unknown default: .up
+        }
     }
 
     /// Set the UI zoom factor. Clamps to the active device's range.
