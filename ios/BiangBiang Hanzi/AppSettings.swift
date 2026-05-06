@@ -5,18 +5,19 @@
 //  Created by christian visintin on 02/11/25.
 //
 
-import Combine
 import Foundation
+import Observation
 
 @MainActor
-final class AppSettings: ObservableObject {
-    @Published var userLanguage: String {
+@Observable
+final class AppSettings {
+    var userLanguage: String {
         didSet {
             UserDefaults.standard.set(userLanguage, forKey: "user_language")
         }
     }
 
-    @Published var chineseVariant: String {
+    var chineseVariant: String {
         didSet { UserDefaults.standard.set(chineseVariant, forKey: "chinese") }
     }
 

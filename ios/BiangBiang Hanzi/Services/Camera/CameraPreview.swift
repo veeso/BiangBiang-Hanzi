@@ -8,10 +8,10 @@
 import AVFoundation
 import SwiftUI
 
-/// Wrapper SwiftUI per mostrare la preview della fotocamera
+/// SwiftUI wrapper that renders the live camera preview.
 struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
-    @ObservedObject var cameraModel: CameraModel
+    let cameraModel: CameraModel
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
@@ -20,15 +20,8 @@ struct CameraPreview: UIViewRepresentable {
         cameraModel.previewLayer = previewLayer
 
         if let connection = previewLayer.connection {
-            if #available(iOS 17.0, *) {
-                // Portrait corresponds to 0 degrees
-                if connection.isVideoRotationAngleSupported(0) {
-                    connection.videoRotationAngle = 0
-                }
-            } else {
-                if connection.isVideoOrientationSupported {
-                    connection.videoOrientation = .portrait
-                }
+            if connection.isVideoRotationAngleSupported(0) {
+                connection.videoRotationAngle = 0
             }
         }
 

@@ -5,178 +5,151 @@
 //  Created by christian visintin on 02/11/25.
 //
 
-import Combine
 import SwiftUI
 import Translation
 
 struct TextModeView: View {
-    @EnvironmentObject var settings: AppSettings
+    @Environment(AppSettings.self) private var settings
 
     @State private var inputText: String = ""
     @State private var pinyinText: String = ""
     @State private var translatedText: String = ""
-    @State private var debounceTimer: AnyCancellable?
+    @State private var debounceTask: Task<Void, Never>?
     @State private var translateConfig: TranslationSession.Configuration?
 
-    private var textProcessor: TextProcessor = .init()
+    private let textProcessor = TextProcessor()
 
     var body: some View {
-        NavigationView {
-            ScrollView {
-                HStack(spacing: 8) {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 48, height: 48)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    Text("BiangBiang Hanzi")
-                        .font(.title)
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 16)
+        ScrollView {
+            HStack(spacing: 8) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 48, height: 48)
+                    .clipShape(.rect(cornerRadius: AppDesign.cornerRadius))
+                    .accessibilityHidden(true)
+                Text("BiangBiang Hanzi")
+                    .font(.title)
+                    .bold()
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 16)
 
-                HStack(spacing: 8) {
-                    Text("Convert Hanzi to Pinyin")
-                        .font(.title2)
-                }
+            Text("Convert Hanzi to Pinyin")
+                .font(.title2)
                 .padding(.vertical, 4)
 
-                VStack(alignment: .leading, spacing: 20) {
-                    // Hanzi input
-                    SectionView(
-                        title: "Hanzi",
-                        actionLabel: "Paste",
-                        actionIcon: "doc.on.clipboard"
-                    ) {
-                        if let pasteboard = UIPasteboard.general.string {
-                            inputText = pasteboard
-                        }
-                    } content: {
-                        TextEditor(text: $inputText)
-                            .font(.title2)
-                            .frame(minHeight: 120)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12).stroke(
-                                    Color.secondary
-                                )
-                            )
-                            .onChange(of: inputText) { _, _ in
-                                scheduleDebouncedProcessing()
-                            }
-                    }.padding(.horizontal, 20)
-
-                    // Pinyin output
-                    SectionView(
-                        title: "Pinyin",
-                        actionLabel: "Copy",
-                        actionIcon: "doc.on.doc"
-                    ) {
-                        copyToClipboard(pinyinText)
-                    } content: {
-                        TextEditor(text: .constant(pinyinText))
-                            .font(.title3)
-                            .frame(minHeight: 120)
-                            .disabled(true)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12).stroke(
-                                    Color.secondary
-                                )
-                            )
-                    }.padding(.horizontal, 20)
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        // Translation output
-                        SectionView(
-                            title: "Translation",
-                            actionLabel: "Copy",
-                            actionIcon: "doc.on.doc"
-                        ) {
-                            copyToClipboard(translatedText)
-                        } content: {
-                            TextEditor(text: .constant(translatedText))
-                                .font(.title3)
-                                .frame(minHeight: 120)
-                                .disabled(true)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12).stroke(
-                                        Color.secondary
-                                    )
-                                )
-                        }
-
-                        HStack {
-                            Spacer() // push button to right
-
-                            Button {
-                                Task { triggerTranslation() }
-                            } label: {
-                                Label("Translate", systemImage: "globe")
-                                    .font(.headline)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color.accentColor)
-                                    .foregroundColor(.white)
-                                    .clipShape(Capsule())
-                            }
-                            .translationTask(translateConfig) { session in
-                                do {
-                                    // Use the session the task provides to translate the text.
-                                    let response = try await session.translate(
-                                        inputText
-                                    )
-                                    // Update the view with the translated result.
-                                    translatedText = response.targetText
-                                } catch {
-                                    translatedText =
-                                        "❌ Translation failed: \(error.localizedDescription)"
-                                }
-                            }
-                            .help("Translate")
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                }
+            VStack(alignment: .leading, spacing: AppDesign.sectionSpacing) {
+                hanziInputSection
+                pinyinOutputSection
+                translationSection
             }
         }
     }
 
+    private var hanziInputSection: some View {
+        SectionView(
+            title: "Hanzi",
+            actionLabel: "Paste",
+            actionIcon: "doc.on.clipboard",
+            action: pasteFromClipboard
+        ) {
+            TextField("Type or paste Hanzi", text: $inputText, axis: .vertical)
+                .font(.title2)
+                .lineLimit(5 ... 10)
+                .padding(8)
+                .overlay {
+                    RoundedRectangle(cornerRadius: AppDesign.cornerRadius)
+                        .stroke(.secondary)
+                }
+                .onChange(of: inputText) { _, _ in
+                    scheduleDebouncedProcessing()
+                }
+        }
+        .padding(.horizontal, AppDesign.horizontalPadding)
+    }
+
+    private var pinyinOutputSection: some View {
+        SectionView(
+            title: "Pinyin",
+            actionLabel: "Copy",
+            actionIcon: "doc.on.doc",
+            action: { copyToClipboard(pinyinText) }
+        ) {
+            ReadOnlyTextBox(text: pinyinText, font: .title3)
+        }
+        .padding(.horizontal, AppDesign.horizontalPadding)
+    }
+
+    private var translationSection: some View {
+        VStack(alignment: .leading, spacing: AppDesign.stackSpacing) {
+            SectionView(
+                title: "Translation",
+                actionLabel: "Copy",
+                actionIcon: "doc.on.doc",
+                action: { copyToClipboard(translatedText) }
+            ) {
+                ReadOnlyTextBox(text: translatedText, font: .title3)
+            }
+
+            HStack {
+                Spacer()
+                Button("Translate", systemImage: "globe", action: triggerTranslation)
+                    .buttonStyle(.borderedProminent)
+                    .buttonBorderShape(.capsule)
+                    .font(.headline)
+                    .translationTask(translateConfig) { session in
+                        await runTranslation(using: session)
+                    }
+                    .accessibilityHint("Translate the Hanzi text to your selected language")
+            }
+        }
+        .padding(.horizontal, AppDesign.horizontalPadding)
+    }
+
     private func triggerTranslation() {
         guard translateConfig == nil else {
-            // Call .invalidate() method to trigger the translation again
-            // with the same configuration instance
             translateConfig?.invalidate()
             return
         }
 
-        // Create a new configuration for the translation session.
-        // This configuration will target the user language as the target language.
         translateConfig = .init(
             source: .init(identifier: settings.chineseVariant),
             target: .init(identifier: settings.userLanguage)
         )
     }
 
+    private func runTranslation(using session: TranslationSession) async {
+        do {
+            let response = try await session.translate(inputText)
+            translatedText = response.targetText
+        } catch {
+            translatedText = "❌ Translation failed: \(error.localizedDescription)"
+        }
+    }
+
     private func scheduleDebouncedProcessing() {
-        debounceTimer?.cancel()
-        debounceTimer = Just(())
-            .delay(for: .seconds(0.8), scheduler: DispatchQueue.main)
-            .sink { _ in
-                processInput()
-            }
+        debounceTask?.cancel()
+        debounceTask = Task {
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled else { return }
+            processInput()
+        }
     }
 
     private func processInput() {
-        guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        else {
+        let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
             pinyinText = ""
             translatedText = ""
             return
         }
+        pinyinText = textProcessor.process(text: inputText) ?? ""
+    }
 
-        Task {
-            // 1. Convert to pinyin
-            pinyinText = textProcessor.process(text: inputText) ?? ""
+    private func pasteFromClipboard() {
+        if let pasteboard = UIPasteboard.general.string {
+            inputText = pasteboard
         }
     }
 
@@ -186,28 +159,23 @@ struct TextModeView: View {
     }
 }
 
-private struct SectionView<Content: View>: View {
-    let title: String
-    let actionLabel: String
-    let actionIcon: String
-    let action: () -> Void
-    let content: () -> Content
+private struct ReadOnlyTextBox: View {
+    let text: String
+    let font: Font
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(title)
-                    .font(.headline)
-                Spacer()
-                Button(action: action) {
-                    Label(actionLabel, systemImage: actionIcon)
-                }
+        Text(text)
+            .font(font)
+            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+            .padding(8)
+            .textSelection(.enabled)
+            .overlay {
+                RoundedRectangle(cornerRadius: AppDesign.cornerRadius)
+                    .stroke(.secondary)
             }
-            content()
-        }
     }
 }
 
 #Preview {
-    TextModeView().environmentObject(AppSettings())
+    TextModeView().environment(AppSettings())
 }
