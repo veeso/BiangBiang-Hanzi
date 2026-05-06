@@ -1,42 +1,56 @@
 package dev.veeso.biangbianghanzi.ui
 
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import dev.veeso.biangbianghanzi.ui.screens.*
+import androidx.compose.ui.graphics.vector.ImageVector
+import dev.veeso.biangbianghanzi.ui.screens.CameraModeView
+import dev.veeso.biangbianghanzi.ui.screens.SettingsModeView
+import dev.veeso.biangbianghanzi.ui.screens.TextModeView
 
-const val TEXT_MODE_VIEW = 0;
-const val CAMERA_MODE_VIEW = 1
-const val SETTINGS_MODE_VIEW = 2
+private enum class Tab(val label: String, val icon: ImageVector) {
+    Text("Text", Icons.Default.TextFields),
+    Camera("Camera", Icons.Default.CameraAlt),
+    Settings("Settings", Icons.Default.Settings),
+}
 
 @Composable
 fun MainScreen() {
-    var selectedItem by remember { mutableIntStateOf(TEXT_MODE_VIEW) }
-    val items = listOf("Text", "Camera", "Settings")
-    val icons = listOf(Icons.Default.TextFields, Icons.Default.CameraAlt, Icons.Default.Settings)
+    var selectedTab by rememberSaveable { mutableStateOf(Tab.Text) }
 
     Scaffold(
         bottomBar = {
             NavigationBar {
-                items.forEachIndexed { index, item ->
+                Tab.entries.forEach { tab ->
                     NavigationBarItem(
-                        icon = { Icon(icons[index], contentDescription = item) },
-                        label = { Text(item) },
-                        selected = selectedItem == index,
-                        onClick = { selectedItem = index }
+                        icon = { Icon(tab.icon, contentDescription = tab.label) },
+                        label = { Text(tab.label) },
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
                     )
                 }
             }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            when (selectedItem) {
-                TEXT_MODE_VIEW -> TextModeView()
-                CAMERA_MODE_VIEW -> CameraModeView()
-                SETTINGS_MODE_VIEW -> SettingsModeView()
+            when (selectedTab) {
+                Tab.Text -> TextModeView()
+                Tab.Camera -> CameraModeView()
+                Tab.Settings -> SettingsModeView()
             }
         }
     }
