@@ -8,6 +8,11 @@
 import Foundation
 
 class TextProcessor {
+    enum Mode {
+        case mandarin
+        case cantonese
+    }
+
     let regex: NSRegularExpression
 
     init() {
@@ -20,10 +25,11 @@ class TextProcessor {
     /// Process given text applying the following operations:
     ///
     /// 1. if the text does not contain ANY hanzi: discard it and return.
-    /// 2. Take all the hanzi characters and convert to pinyin
-    /// 3. add leading space to pinyin, otherwise latin characters are sticked to the other
+    /// 2. Take all the hanzi characters and convert them to the chosen romanization
+    ///    (Mandarin pinyin by default, or Cantonese Jyutping when `mode == .cantonese`)
+    /// 3. add leading/trailing spaces around inserted romanization where appropriate
     /// 4. trim
-    func process(text: String) -> String? {
+    func process(text: String, mode: Mode = .mandarin) -> String? {
         guard containsHanzi(text: text) else { return nil }
         let range = NSRange(text.startIndex..., in: text)
 
@@ -37,7 +43,13 @@ class TextProcessor {
             }
 
             let hanzi = String(result[range])
-            let pinyin = hanziToPinyin(hanzi: hanzi)
+            let romanized: String
+            switch mode {
+            case .mandarin:
+                romanized = hanziToPinyin(hanzi: hanzi)
+            case .cantonese:
+                romanized = hanziToJyutping(hanzi: hanzi)
+            }
 
             // Space before
             let needsLeadingSpace: Bool = {
@@ -61,7 +73,7 @@ class TextProcessor {
 
             let replacement =
                 (needsLeadingSpace ? " " : "") +
-                pinyin +
+                romanized +
                 (needsTrailingSpace ? " " : "")
 
             result.replaceSubrange(range, with: replacement)
@@ -93,11 +105,27 @@ class TextProcessor {
     ///
     /// Example:
     ///
-    /// “你好” -》 “nǐhǎo“
-    /// ”我喜欢饺子🥟“ -〉 ”wǒ xǐhuān jiǎozǐ 🥟“
+    /// "你好" -> "nǐhǎo"
+    /// "我喜欢饺子🥟" -> "wǒ xǐhuān jiǎozǐ 🥟"
     func hanziToPinyin(hanzi: String) -> String {
         let mutString = NSMutableString(string: hanzi) as CFMutableString
         CFStringTransform(mutString, nil, kCFStringTransformToLatin, false)
         return mutString as String
+    }
+
+    /// Converts a string of Han characters to Jyutping (space-separated syllables).
+    /// Unknown characters are preserved verbatim. Resulting tokens are joined by single spaces.
+    func hanziToJyutping(hanzi: String) -> String {
+        let dict = JyutpingDictionary.shared
+        var tokens: [String] = []
+        for scalar in hanzi {
+            let key = String(scalar)
+            if let reading = dict.reading(for: key) {
+                tokens.append(reading)
+            } else {
+                tokens.append(key)
+            }
+        }
+        return tokens.joined(separator: " ")
     }
 }
