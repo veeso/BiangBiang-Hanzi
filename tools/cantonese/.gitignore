@@ -1,0 +1,6 @@
+Unihan.zip
+Unihan_*.txt
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
