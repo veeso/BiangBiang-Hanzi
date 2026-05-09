@@ -43,7 +43,7 @@ class TextProcessor(
             val needsLeadingSpace = when {
                 start == 0 -> false
                 result[start - 1] == ' ' -> false
-                ".,!?;:。,".contains(result[start - 1]) -> false
+                ".,!?;:。，".contains(result[start - 1]) -> false
                 else -> true
             }
 
