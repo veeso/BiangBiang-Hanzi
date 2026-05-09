@@ -22,6 +22,10 @@ BiangBiang Hanzi is a dual-platform native mobile app (iOS + Android) that conve
 - **Run a single test class:** `cd android && ./gradlew test --tests "dev.veeso.biangbianghanzi.TextProcessorTest"`
 - **Run instrumented tests:** `cd android && ./gradlew connectedAndroidTest`
 
+### Website (Tailwind CSS v3)
+
+- **Build CSS:** `npx tailwindcss@3 -i ./site/input.css -o ./site/output.css --minify`. **Run this whenever website content under `site/` is modified.**
+
 ## Architecture
 
 ### iOS (`ios/BiangBiang Hanzi/`)
