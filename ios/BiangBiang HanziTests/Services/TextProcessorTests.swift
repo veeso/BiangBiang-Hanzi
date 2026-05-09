@@ -53,4 +53,25 @@ struct TestProcessorTests {
         let processedText = TextProcessor().process(text: text)
         #expect(processedText == expectedText)
     }
+
+    @Test func shouldConvertHanziWordToJyutping() {
+        let jyutping = TextProcessor().hanziToJyutping(hanzi: "你好")
+        #expect(jyutping == "nei5 hou2")
+    }
+
+    @Test func shouldConvertHanziSentenceToJyutpingPreservingPunctuation() {
+        let text = "我喜歡食餃子🥟"
+        let result = TextProcessor().process(text: text, mode: .cantonese)
+        #expect(result == "ngo5 hei2 fun1 sik6 gaau2 zi2🥟")
+    }
+
+    @Test func shouldKeepUnknownCharsVerbatimInCantoneseMode() {
+        let result = TextProcessor().process(text: "A好B", mode: .cantonese)
+        #expect(result == "A hou2 B")
+    }
+
+    @Test func shouldDefaultToMandarinMode() {
+        let result = TextProcessor().process(text: "你好")
+        #expect(result == "nǐ hǎo")
+    }
 }
