@@ -16,6 +16,7 @@ struct TextModeView: View {
     @State private var translatedText: String = ""
     @State private var debounceTask: Task<Void, Never>?
     @State private var translateConfig: TranslationSession.Configuration?
+    @FocusState private var inputFocused: Bool
 
     private let textProcessor = TextProcessor()
 
@@ -44,7 +45,13 @@ struct TextModeView: View {
                 pinyinOutputSection
                 translationSection
             }
-        }
+        }.scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { inputFocused = false }
+                }
+            }
     }
 
     private var hanziInputSection: some View {
@@ -55,6 +62,7 @@ struct TextModeView: View {
             action: pasteFromClipboard
         ) {
             TextField("Type or paste Hanzi", text: $inputText, axis: .vertical)
+                .focused($inputFocused)
                 .font(.title2)
                 .lineLimit(5 ... 10)
                 .padding(8)
