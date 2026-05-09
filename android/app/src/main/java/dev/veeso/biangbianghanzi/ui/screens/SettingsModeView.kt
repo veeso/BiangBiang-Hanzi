@@ -14,10 +14,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -104,14 +106,16 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
 
             SettingsSection(title = "Chinese variant") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        listOf(SIMPLIFIED_CHINESE, TRADITIONAL_CHINESE, CANTONESE).forEach { value ->
-                            FilterChip(
+                    val variants = listOf(SIMPLIFIED_CHINESE, TRADITIONAL_CHINESE, CANTONESE)
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        variants.forEachIndexed { index, value ->
+                            SegmentedButton(
                                 selected = chineseType == value,
                                 onClick = { scope.launch { repo.setChineseType(value) } },
+                                shape = SegmentedButtonDefaults.itemShape(
+                                    index = index,
+                                    count = variants.size,
+                                ),
                                 label = { Text(chineseTypeLabel(value)) },
                             )
                         }
@@ -158,8 +162,8 @@ private fun currentLanguageName(locales: List<Locale>, current: String): String 
     locales.find { it.language == current }?.displayLanguage ?: current
 
 private fun chineseTypeLabel(value: String): String = when (value) {
-    SIMPLIFIED_CHINESE -> "Simplified Chinese"
-    TRADITIONAL_CHINESE -> "Traditional Chinese"
+    SIMPLIFIED_CHINESE -> "Simplified"
+    TRADITIONAL_CHINESE -> "Traditional"
     CANTONESE -> "Cantonese"
     else -> "Unknown"
 }
