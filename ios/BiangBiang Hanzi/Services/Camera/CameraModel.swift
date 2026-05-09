@@ -57,6 +57,7 @@ final class CameraModel: NSObject, AVCapturePhotoCaptureDelegate,
     @ObservationIgnored var previewLayer: AVCaptureVideoPreviewLayer?
     @ObservationIgnored private var lastProcessingTime = Date.distantPast
     @ObservationIgnored private let textProcessor = TextProcessor()
+    @ObservationIgnored private var isConfigured = false
 
     /// Capture a photo and start task to recognize text
     func capturePhoto() {
@@ -163,12 +164,18 @@ final class CameraModel: NSObject, AVCapturePhotoCaptureDelegate,
     }
 
     private func configureAndStartSession() async {
-        // Configure on main actor
-        configureSession()
+        // Configure once. Re-running configureSession across tab switches
+        // re-locks the device and re-attaches inputs while the previous
+        // configuration is still partially live, which leaves the camera in
+        // a broken state on the second return to the camera tab.
+        if !isConfigured {
+            configureSession()
+            isConfigured = true
+        }
         // Start running on a background thread
         await startCaptureSession()
         // Re-apply initial zoom: addInput resets videoZoomFactor on some devices.
-        setZoom(1.0)
+        setZoom(zoomFactor)
     }
 
     private func configureSession() {
