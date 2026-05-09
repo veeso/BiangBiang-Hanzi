@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import dev.veeso.biangbianghanzi.services.AppSettingsRepository
+import dev.veeso.biangbianghanzi.services.CANTONESE
 import dev.veeso.biangbianghanzi.services.SIMPLIFIED_CHINESE
 import dev.veeso.biangbianghanzi.services.TRADITIONAL_CHINESE
 import dev.veeso.biangbianghanzi.ui.AppDesign
@@ -77,6 +78,7 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(
                         onClick = { languageSelectExpanded = true },
+                        enabled = chineseType != CANTONESE,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(currentLanguageName(allLanguages, translationLanguage))
@@ -101,15 +103,24 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
             }
 
             SettingsSection(title = "Chinese variant") {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    listOf(SIMPLIFIED_CHINESE, TRADITIONAL_CHINESE).forEach { value ->
-                        FilterChip(
-                            selected = chineseType == value,
-                            onClick = { scope.launch { repo.setChineseType(value) } },
-                            label = { Text(chineseTypeLabel(value)) },
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        listOf(SIMPLIFIED_CHINESE, TRADITIONAL_CHINESE, CANTONESE).forEach { value ->
+                            FilterChip(
+                                selected = chineseType == value,
+                                onClick = { scope.launch { repo.setChineseType(value) } },
+                                label = { Text(chineseTypeLabel(value)) },
+                            )
+                        }
+                    }
+                    if (chineseType == CANTONESE) {
+                        Text(
+                            "Translation is disabled in Cantonese mode. Hanzi will be romanized to Jyutping.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -149,6 +160,7 @@ private fun currentLanguageName(locales: List<Locale>, current: String): String 
 private fun chineseTypeLabel(value: String): String = when (value) {
     SIMPLIFIED_CHINESE -> "Simplified Chinese"
     TRADITIONAL_CHINESE -> "Traditional Chinese"
+    CANTONESE -> "Cantonese"
     else -> "Unknown"
 }
 
