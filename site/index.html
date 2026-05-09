@@ -5,12 +5,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>
-    BiangBiang Hanzi — Chinese to Pinyin Translator & OCR App for iOS and Android
+    BiangBiang Hanzi — Chinese to Pinyin & Cantonese Jyutping Translator & OCR App for iOS and Android
   </title>
   <meta name="description"
-    content="Free Chinese to Pinyin translator app for iPhone and Android. Convert Hanzi characters to Pinyin with tone marks, scan Chinese text from photos and the live camera with OCR, and translate Chinese instantly." />
+    content="Free Chinese to Pinyin and Cantonese Jyutping translator app for iPhone and Android. Convert Hanzi to Pinyin or Jyutping with tone marks, scan Chinese text from photos and the live camera with OCR, and translate Mandarin Chinese instantly." />
   <meta name="keywords"
-    content="Chinese to Pinyin, Hanzi to Pinyin converter, Chinese OCR, Chinese translator app, scan Chinese characters, Pinyin with tone marks, learn Mandarin, Chinese reader, Hanzi translator, iOS Chinese app, Android Chinese app" />
+    content="Chinese to Pinyin, Hanzi to Pinyin converter, Chinese OCR, Chinese translator app, scan Chinese characters, Pinyin with tone marks, learn Mandarin, Chinese reader, Hanzi translator, iOS Chinese app, Android Chinese app, Cantonese Jyutping, Hanzi to Jyutping, Cantonese reader, learn Cantonese" />
   <meta name="author" content="Christian Visintin" />
   <meta name="robots" content="index, follow" />
   <meta name="application-name" content="BiangBiang Hanzi" />
@@ -18,9 +18,9 @@
   <meta name="theme-color" content="#0f172a" />
   <link rel="canonical" href="https://biangbianghanzi.app/" />
   <!-- Open Graph -->
-  <meta property="og:title" content="BiangBiang Hanzi — Chinese to Pinyin Translator & OCR App" />
+  <meta property="og:title" content="BiangBiang Hanzi — Chinese to Pinyin & Cantonese Jyutping Translator & OCR App" />
   <meta property="og:description"
-    content="Convert Chinese Hanzi characters to Pinyin with tone marks, scan text from photos, and translate Chinese instantly on iPhone and Android." />
+    content="Convert Chinese Hanzi to Pinyin (Mandarin) or Jyutping (Cantonese) with tone marks, scan text from photos, and translate Mandarin Chinese instantly on iPhone and Android." />
   <meta property="og:image" content="https://biangbianghanzi.app/assets/images/og_preview.jpeg" />
   <meta property="og:image:alt" content="BiangBiang Hanzi app preview showing Hanzi to Pinyin conversion" />
   <meta property="og:image:type" content="image/jpeg" />
@@ -32,9 +32,9 @@
   <meta property="og:url" content="https://biangbianghanzi.app/" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="BiangBiang Hanzi — Chinese to Pinyin Translator & OCR App" />
+  <meta name="twitter:title" content="BiangBiang Hanzi — Chinese to Pinyin & Cantonese Jyutping Translator & OCR App" />
   <meta name="twitter:description"
-    content="Convert Chinese Hanzi characters to Pinyin with tone marks, scan text from photos, and translate Chinese instantly on iPhone and Android." />
+    content="Convert Chinese Hanzi to Pinyin (Mandarin) or Jyutping (Cantonese) with tone marks, scan text from photos, and translate Mandarin Chinese instantly on iPhone and Android." />
   <meta name="twitter:image" content="https://biangbianghanzi.app/assets/images/og_preview.jpeg" />
   <meta name="twitter:image:alt" content="BiangBiang Hanzi app preview showing Hanzi to Pinyin conversion" />
   <!-- tailwind -->
@@ -52,10 +52,10 @@
     "operatingSystem": "iOS, Android",
     "applicationCategory": "EducationalApplication",
     "applicationSubCategory": "Language Learning",
-    "description": "Free Chinese to Pinyin translator app for iPhone and Android. Convert Hanzi characters to Pinyin with tone marks, scan Chinese text from photos and the live camera with OCR, and translate Chinese instantly.",
+    "description": "Free Chinese to Pinyin and Cantonese Jyutping translator app for iPhone and Android. Convert Hanzi to Pinyin or Jyutping with tone marks, scan Chinese text from photos and the live camera with OCR, and translate Mandarin Chinese instantly.",
     "url": "https://biangbianghanzi.app/",
     "image": "https://biangbianghanzi.app/assets/images/og_preview.jpeg",
-    "inLanguage": ["en", "zh"],
+    "inLanguage": ["en", "zh", "yue"],
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -86,7 +86,7 @@
       </div>
       <h1 class="text-3xl font-bold text-center text-white mb-2">𰻝𰻝汉子 BiangBiang Hanzi</h1>
       <p class="text-center text-white text-xl mb-6 px-4">
-        The free Chinese to Pinyin translator and OCR app for iPhone and Android.
+        The free Chinese to Pinyin and Cantonese Jyutping translator and OCR app for iPhone and Android.
       </p>
     </div>
 
@@ -119,13 +119,14 @@
 
     <!-- SEO content -->
     <section class="max-w-3xl mx-auto px-6 py-12 text-white">
-      <h2 class="text-2xl font-bold mb-4">Convert Chinese Hanzi to Pinyin in seconds</h2>
+      <h2 class="text-2xl font-bold mb-4">Convert Chinese Hanzi to Pinyin or Cantonese Jyutping in seconds</h2>
       <p class="mb-4">
         BiangBiang Hanzi is a free, native mobile app that turns Chinese characters (汉字, Hanzi) into
-        Pinyin with accurate tone marks. Paste or type any Chinese text — a poem, a menu, a chat
-        message, a textbook paragraph — and get the romanized pronunciation instantly. Non-Chinese
-        characters such as Latin letters, numbers, punctuation and emoji are preserved in place, so
-        mixed-language text stays readable.
+        Pinyin (Mandarin) or Jyutping (Cantonese) with accurate tone marks. Paste or type any Chinese
+        text — a poem, a menu, a chat message, a textbook paragraph — and get the romanized
+        pronunciation instantly. Switch between Simplified, Traditional, and Cantonese variants in
+        Settings. Non-Chinese characters such as Latin letters, numbers, punctuation and emoji are
+        preserved in place, so mixed-language text stays readable.
       </p>
       <p class="mb-4">
         The app is built natively for both platforms: a SwiftUI version for iPhone and iPad, and a
@@ -143,18 +144,20 @@
         Pinyin reading, making it easy to study, pronounce, or look up unfamiliar Hanzi on the spot.
       </p>
 
-      <h2 class="text-2xl font-bold mt-10 mb-4">Translate Chinese to your language</h2>
+      <h2 class="text-2xl font-bold mt-10 mb-4">Translate Mandarin Chinese to your language</h2>
       <p class="mb-4">
-        Beyond pronunciation, BiangBiang Hanzi can translate Chinese text into your preferred
-        language using on-device translation: the iOS Translation framework on iPhone and Google ML
-        Kit Translate on Android. Translations run locally once the language pack is downloaded, so
-        the app keeps working without an internet connection and without sending your text to a
-        third-party server.
+        Beyond pronunciation, BiangBiang Hanzi can translate Mandarin Chinese text into your
+        preferred language using on-device translation: the iOS Translation framework on iPhone and
+        Google ML Kit Translate on Android. Translations run locally once the language pack is
+        downloaded, so the app keeps working without an internet connection and without sending your
+        text to a third-party server. Translation is available for Mandarin only — Cantonese mode
+        provides Jyutping romanization without translation.
       </p>
 
       <h2 class="text-2xl font-bold mt-10 mb-4">Who is it for?</h2>
       <ul class="list-disc list-inside mb-4 space-y-2">
         <li>Mandarin Chinese learners who need quick Pinyin readings while studying.</li>
+        <li>Cantonese learners who want Jyutping romanization for Hanzi.</li>
         <li>Travelers in China, Taiwan, Hong Kong, Singapore or Malaysia who need to read signs and menus.</li>
         <li>Teachers and students who work with Chinese textbooks, flashcards, or handwritten notes.</li>
         <li>Anyone who receives Chinese messages, documents or photos and wants to understand them.</li>
@@ -163,9 +166,10 @@
       <h2 class="text-2xl font-bold mt-10 mb-4">Key features</h2>
       <ul class="list-disc list-inside mb-4 space-y-2">
         <li>Hanzi to Pinyin conversion with tone marks (mā, má, mǎ, mà, ma).</li>
-        <li>Support for both Simplified and Traditional Chinese characters.</li>
+        <li>Hanzi to Cantonese Jyutping conversion (e.g. nei5 hou2 for 你好).</li>
+        <li>Support for Simplified, Traditional, and Cantonese variants.</li>
         <li>OCR from photos and from the live camera feed.</li>
-        <li>On-device translation of Chinese into many target languages.</li>
+        <li>On-device translation of Mandarin Chinese into many target languages.</li>
         <li>Privacy-friendly: text and images stay on your device.</li>
         <li>Free to download on the App Store and Google Play.</li>
         <li>Native iOS (SwiftUI) and Android (Jetpack Compose) apps.</li>
