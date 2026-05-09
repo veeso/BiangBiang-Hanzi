@@ -1,10 +1,10 @@
-# 𰻝𰻝汉子 BiangBiang Hanzi
+# BiangBiang Hanzi
 
 ![Logo](./assets/logo128.png)
 
 ## Overview
 
-𰻝𰻝汉子 BiangBiang Hanzi is an iOS and Android application that allows users to convert Hanzi (Chinese characters) to Pinyin and translate Chinese text into any language. It supports both traditional and simplified Chinese characters and includes OCR capabilities for recognizing text from images, either live or from the camera.
+𰻝𰻝汉子 BiangBiang Hanzi is an iOS and Android application that converts Hanzi (Chinese characters) to Pinyin (Mandarin) or Jyutping (Cantonese), and translates Mandarin Chinese text into any language. It supports Simplified, Traditional, and Cantonese variants, and includes OCR capabilities for recognizing text from images, either live or from files. Translation is available for Mandarin only — Cantonese mode provides romanization without translation.
 
 This app has been developed using Swift and SwiftUI, leveraging the power of Apple's Vision framework for OCR functionality.
 
@@ -12,12 +12,11 @@ I developed this app to help myself and others learn Chinese more effectively by
 
 ## Features
 
-- [x] Convert Hanzi to Pinyin
-- [x] Translate Chinese to any language
-- [x] Support for traditional and simplified Chinese characters
+- [x] Convert Hanzi to Pinyin (Mandarin) and Jyutping (Cantonese)
+- [x] Translate Chinese to any language (Mandarin only)
+- [x] Support for Simplified, Traditional, and Cantonese variants
 - [x] OCR support for images (both live and from camera)
 - [x] OCR support from files
-- [ ] Cantonese support (coming soon)
 
 ## Download
 
@@ -33,6 +32,10 @@ You can purchase 𰻝𰻝汉子 BiangBiang Hanzi from the App Store and from the
   ```bash
   brew install swiftformat
   ```
+
+## Cantonese data
+
+The Cantonese (Jyutping) dictionary is generated from the Unicode Unihan database. To regenerate `assets/cantonese.json`, see [`tools/cantonese/README.md`](./tools/cantonese/README.md).
 
 ## iOS
 
