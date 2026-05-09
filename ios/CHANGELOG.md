@@ -3,12 +3,24 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.4.0](#040)
   - [0.3.1](#031)
   - [0.3.0](#030)
   - [0.2.0](#020)
   - [0.1.3](#013)
   - [0.1.2](#012)
   - [0.1.1](#011)
+
+## 0.4.0
+
+Released on 09/05/2026
+
+- Added Cantonese support:
+  - New `JyutpingDictionary` backed by a bundled `cantonese.json` generated from the Unihan `kCantonese` field.
+  - `TextProcessor` gains a `.cantonese` mode that romanizes Hanzi to Jyutping.
+  - Settings expose a "Cantonese" Chinese variant; text mode swaps the "Pinyin" header for "Jyutping", disables the translation language picker and hides the translation section since the Apple Translation API does not support Cantonese.
+- Added a setting to dismiss the keyboard automatically when typing Hanzi on the home tab.
+- Camera: configure the `AVCaptureSession` once at startup and only start/stop it on tab switch, removing the visible reconfiguration delay when returning to the camera tab.
 
 ## 0.3.1
 

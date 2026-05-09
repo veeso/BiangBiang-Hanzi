@@ -3,10 +3,22 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.4.0](#040)
   - [0.3.1](#031)
   - [0.3.0](#030)
   - [0.2.0](#020)
   - [0.1.1](#011)
+
+## 0.4.0
+
+Released on 09/05/2026
+
+- Added Cantonese support:
+  - New `JyutpingDictionary` backed by a bundled `cantonese.json` generated from the Unihan `kCantonese` field.
+  - `TextProcessor` gains a `CANTONESE` mode that romanizes Hanzi to Jyutping.
+  - Settings expose a "Cantonese" Chinese variant; text mode swaps the "Pinyin" header for "Jyutping" and hides the translation section since ML Kit does not translate Cantonese.
+- Settings UI: replaced the Chinese variant `FilterChip` row with a `SingleChoiceSegmentedButtonRow` so the Cantonese option fits on narrow screens, mirroring the iOS segmented picker.
+- Restored the fullwidth comma (`，`) in the `TextProcessor` punctuation set so it is preserved instead of stripped from converted output.
 
 ## 0.3.1
 
