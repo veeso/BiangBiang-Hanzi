@@ -7,8 +7,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.map
 
-const val TRADITIONAL_CHINESE = "traditional_chinese";
-const val SIMPLIFIED_CHINESE = "simplified_chinese";
+const val TRADITIONAL_CHINESE = "traditional_chinese"
+const val SIMPLIFIED_CHINESE = "simplified_chinese"
+const val CANTONESE = "cantonese"
 
 private val Context.dataStore by preferencesDataStore("app_settings")
 

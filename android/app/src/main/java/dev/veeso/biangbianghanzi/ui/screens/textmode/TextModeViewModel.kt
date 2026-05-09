@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
+import dev.veeso.biangbianghanzi.services.JyutpingDictionary
 import dev.veeso.biangbianghanzi.services.TextProcessor
 import dev.veeso.biangbianghanzi.ui.AppDesign
 import kotlinx.coroutines.Job
@@ -27,8 +28,22 @@ class TextModeViewModel : ViewModel() {
     private val _translatedText = MutableStateFlow("")
     val translatedText = _translatedText.asStateFlow()
 
-    private val textProcessor = TextProcessor()
+    private var processor: TextProcessor = TextProcessor()
     private var debounceJob: Job? = null
+    private var currentMode: TextProcessor.Mode = TextProcessor.Mode.MANDARIN
+
+    fun setMode(context: Context, isCantonese: Boolean) {
+        val newMode = if (isCantonese) TextProcessor.Mode.CANTONESE else TextProcessor.Mode.MANDARIN
+        if (newMode == currentMode) return
+        currentMode = newMode
+        processor = if (isCantonese) {
+            TextProcessor(jyutping = JyutpingDictionary.get(context))
+        } else {
+            TextProcessor()
+        }
+        _translatedText.value = ""
+        processInput()
+    }
 
     fun onInputChanged(newText: String) {
         _inputText.value = newText
@@ -46,10 +61,11 @@ class TextModeViewModel : ViewModel() {
             _translatedText.value = ""
             return
         }
-        _pinyinText.value = textProcessor.hanziToPinyin(text)
+        _pinyinText.value = processor.process(text, currentMode) ?: ""
     }
 
     fun translate(userLanguage: String) {
+        if (currentMode == TextProcessor.Mode.CANTONESE) return
         val text = _inputText.value.trim()
         if (text.isEmpty()) return
 
@@ -63,9 +79,7 @@ class TextModeViewModel : ViewModel() {
         translator.downloadModelIfNeeded()
             .addOnSuccessListener {
                 translator.translate(text)
-                    .addOnSuccessListener { translated ->
-                        _translatedText.value = translated
-                    }
+                    .addOnSuccessListener { translated -> _translatedText.value = translated }
                     .addOnFailureListener { e ->
                         _translatedText.value = "⚠️ Translation failed: ${e.message}"
                     }

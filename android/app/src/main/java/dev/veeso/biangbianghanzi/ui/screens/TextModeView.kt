@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -41,6 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.veeso.biangbianghanzi.R
+import dev.veeso.biangbianghanzi.services.AppSettingsRepository
+import dev.veeso.biangbianghanzi.services.CANTONESE
+import dev.veeso.biangbianghanzi.services.SIMPLIFIED_CHINESE
 import dev.veeso.biangbianghanzi.ui.AppDesign
 import dev.veeso.biangbianghanzi.ui.components.SectionView
 import dev.veeso.biangbianghanzi.ui.screens.textmode.TextModeViewModel
@@ -48,14 +52,21 @@ import java.util.Locale
 
 
 @Composable
-fun TextModeView(viewModel: TextModeViewModel = viewModel()) {
+fun TextModeView(
+    viewModel: TextModeViewModel = viewModel(),
+    settingsRepo: AppSettingsRepository = AppSettingsRepository(LocalContext.current),
+) {
     val inputText by viewModel.inputText.collectAsState()
     val pinyinText by viewModel.pinyinText.collectAsState()
     val translatedText by viewModel.translatedText.collectAsState()
+    val chineseType by settingsRepo.chineseType.collectAsState(initial = SIMPLIFIED_CHINESE)
     val context = LocalContext.current
     val clipboard = remember {
         context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
+    val isCantonese = chineseType == CANTONESE
+
+    LaunchedEffect(isCantonese) { viewModel.setMode(context, isCantonese) }
 
     Scaffold { innerPadding ->
         Column(
@@ -96,7 +107,7 @@ fun TextModeView(viewModel: TextModeViewModel = viewModel()) {
             }
 
             SectionView(
-                title = "Pinyin",
+                title = if (isCantonese) "Jyutping" else "Pinyin",
                 actionLabel = "Copy",
                 actionIcon = Icons.Default.ContentCopy,
                 onActionClick = { viewModel.copyToClipboard(context, pinyinText) },
@@ -112,31 +123,33 @@ fun TextModeView(viewModel: TextModeViewModel = viewModel()) {
                 )
             }
 
-            SectionView(
-                title = "Translation",
-                actionLabel = "Copy",
-                actionIcon = Icons.Default.ContentCopy,
-                onActionClick = { viewModel.copyToClipboard(context, translatedText) },
-            ) {
-                OutlinedTextField(
-                    value = translatedText,
-                    onValueChange = {},
-                    readOnly = true,
-                    textStyle = LocalTextStyle.current.copy(fontSize = 18.sp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 120.dp),
-                )
-            }
+            if (!isCantonese) {
+                SectionView(
+                    title = "Translation",
+                    actionLabel = "Copy",
+                    actionIcon = Icons.Default.ContentCopy,
+                    onActionClick = { viewModel.copyToClipboard(context, translatedText) },
+                ) {
+                    OutlinedTextField(
+                        value = translatedText,
+                        onValueChange = {},
+                        readOnly = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 18.sp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp),
+                    )
+                }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                Button(onClick = { viewModel.translate(Locale.getDefault().language) }) {
-                    Icon(Icons.Default.Translate, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Translate")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    Button(onClick = { viewModel.translate(Locale.getDefault().language) }) {
+                        Icon(Icons.Default.Translate, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Translate")
+                    }
                 }
             }
         }
