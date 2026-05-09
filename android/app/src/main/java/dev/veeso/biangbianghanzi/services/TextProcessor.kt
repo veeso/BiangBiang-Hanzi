@@ -6,7 +6,11 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType
 import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType
 
-class TextProcessor {
+class TextProcessor(
+    private val jyutping: JyutpingDictionary? = null,
+) {
+
+    enum class Mode { MANDARIN, CANTONESE }
 
     // Unicode range for CJK Unified Ideographs: U+4E00–U+9FFF
     val pattern = Regex("[\\u4E00-\\u9FFF]+")
@@ -17,7 +21,7 @@ class TextProcessor {
         vCharType = HanyuPinyinVCharType.WITH_U_UNICODE
     }
 
-    fun process(text: String): String? {
+    fun process(text: String, mode: Mode = Mode.MANDARIN): String? {
         if (!pattern.containsMatchIn(text)) {
             return null
         }
@@ -30,13 +34,16 @@ class TextProcessor {
             val end = match.range.last + 1
 
             val hanzi = result.substring(start, end)
-            val pinyin = hanziToPinyin(hanzi)
+            val romanized = when (mode) {
+                Mode.MANDARIN -> hanziToPinyin(hanzi)
+                Mode.CANTONESE -> hanziToJyutping(hanzi)
+            }
 
             // Space before
             val needsLeadingSpace = when {
                 start == 0 -> false
                 result[start - 1] == ' ' -> false
-                ".,!?;:。，".contains(result[start - 1]) -> false
+                ".,!?;:。,".contains(result[start - 1]) -> false
                 else -> true
             }
 
@@ -51,7 +58,7 @@ class TextProcessor {
 
             val replacement = buildString {
                 if (needsLeadingSpace) append(' ')
-                append(pinyin)
+                append(romanized)
                 if (needsTrailingSpace) append(' ')
             }
 
@@ -68,8 +75,24 @@ class TextProcessor {
         return PinyinHelper.toHanYuPinyinString(
             text, format,
             " ",
-            true
+            true,
         )
     }
 
+    /**
+     * Converts a string of Han characters to Jyutping (space-separated syllables).
+     * Unknown characters are kept verbatim. Requires a JyutpingDictionary; throws if absent.
+     */
+    fun hanziToJyutping(text: String): String {
+        val dict = jyutping
+            ?: error("JyutpingDictionary not provided to TextProcessor")
+        val out = StringBuilder()
+        for (i in text.indices) {
+            val ch = text[i].toString()
+            val reading = dict.reading(ch) ?: ch
+            if (out.isNotEmpty()) out.append(' ')
+            out.append(reading)
+        }
+        return out.toString()
+    }
 }
