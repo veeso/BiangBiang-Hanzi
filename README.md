@@ -52,12 +52,8 @@ This project is licensed under the Elastic V2 license. See the [LICENSE](./LICEN
 
 Convert Hanzi to Pinyin and translate.
 
-![Preview](./assets/preview.png)
+![Preview](./assets/preview.webp)
 
 Recognize hanzi from live images and convert to Pinyin.
 
-![Camera OCR](./assets/camera_ocr.png)
-
-Configure whether to use traditional or simplified Chinese characters.
-
-![Settings](./assets/settings.png)
+![Camera OCR](./assets/camera_ocr.webp)
