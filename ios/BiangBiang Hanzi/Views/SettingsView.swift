@@ -32,16 +32,31 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.menu)
+                    .disabled(settings.isCantonese)
                 } header: {
                     Label("Translation language", systemImage: "globe")
+                } footer: {
+                    if settings.isCantonese {
+                        Text("Translation is unavailable in Cantonese mode.")
+                    }
                 }
 
                 Section {
                     Picker("Variant", selection: $settings.chineseVariant) {
-                        Text("Simplified").tag("zh-Hans")
-                        Text("Traditional").tag("zh-Hant")
+                        Text("Simplified").tag(AppSettings.simplifiedChinese)
+                        Text("Traditional").tag(AppSettings.traditionalChinese)
+                        Text("Cantonese").tag(AppSettings.cantonese)
                     }
                     .pickerStyle(.segmented)
+
+                    if settings.isCantonese {
+                        Label(
+                            "Translation is disabled when Cantonese is selected. Hanzi will be romanized to Jyutping.",
+                            systemImage: "info.circle"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    }
                 } header: {
                     Label("Chinese variant", systemImage: "textformat")
                 }

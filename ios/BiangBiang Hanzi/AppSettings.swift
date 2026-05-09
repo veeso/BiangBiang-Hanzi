@@ -11,6 +11,10 @@ import Observation
 @MainActor
 @Observable
 final class AppSettings {
+    static let simplifiedChinese = "zh-Hans"
+    static let traditionalChinese = "zh-Hant"
+    static let cantonese = "yue"
+
     var userLanguage: String {
         didSet {
             UserDefaults.standard.set(userLanguage, forKey: "user_language")
@@ -19,6 +23,10 @@ final class AppSettings {
 
     var chineseVariant: String {
         didSet { UserDefaults.standard.set(chineseVariant, forKey: "chinese") }
+    }
+
+    var isCantonese: Bool {
+        chineseVariant == Self.cantonese
     }
 
     init(

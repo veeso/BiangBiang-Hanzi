@@ -45,13 +45,18 @@ struct TextModeView: View {
                 pinyinOutputSection
                 translationSection
             }
-        }.scrollDismissesKeyboard(.interactively)
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") { inputFocused = false }
-                }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .onChange(of: settings.chineseVariant) { _, _ in
+            translatedText = ""
+            processInput()
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { inputFocused = false }
             }
+        }
     }
 
     private var hanziInputSection: some View {
@@ -79,7 +84,7 @@ struct TextModeView: View {
 
     private var pinyinOutputSection: some View {
         SectionView(
-            title: "Pinyin",
+            title: settings.isCantonese ? "Jyutping" : "Pinyin",
             actionLabel: "Copy",
             actionIcon: "doc.on.doc",
             action: { copyToClipboard(pinyinText) }
@@ -89,30 +94,35 @@ struct TextModeView: View {
         .padding(.horizontal, AppDesign.horizontalPadding)
     }
 
+    @ViewBuilder
     private var translationSection: some View {
-        VStack(alignment: .leading, spacing: AppDesign.stackSpacing) {
-            SectionView(
-                title: "Translation",
-                actionLabel: "Copy",
-                actionIcon: "doc.on.doc",
-                action: { copyToClipboard(translatedText) }
-            ) {
-                ReadOnlyTextBox(text: translatedText, font: .title3)
-            }
+        if settings.isCantonese {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: AppDesign.stackSpacing) {
+                SectionView(
+                    title: "Translation",
+                    actionLabel: "Copy",
+                    actionIcon: "doc.on.doc",
+                    action: { copyToClipboard(translatedText) }
+                ) {
+                    ReadOnlyTextBox(text: translatedText, font: .title3)
+                }
 
-            HStack {
-                Spacer()
-                Button("Translate", systemImage: "globe", action: triggerTranslation)
-                    .buttonStyle(.borderedProminent)
-                    .buttonBorderShape(.capsule)
-                    .font(.headline)
-                    .translationTask(translateConfig) { session in
-                        await runTranslation(using: session)
-                    }
-                    .accessibilityHint("Translate the Hanzi text to your selected language")
+                HStack {
+                    Spacer()
+                    Button("Translate", systemImage: "globe", action: triggerTranslation)
+                        .buttonStyle(.borderedProminent)
+                        .buttonBorderShape(.capsule)
+                        .font(.headline)
+                        .translationTask(translateConfig) { session in
+                            await runTranslation(using: session)
+                        }
+                        .accessibilityHint("Translate the Hanzi text to your selected language")
+                }
             }
+            .padding(.horizontal, AppDesign.horizontalPadding)
         }
-        .padding(.horizontal, AppDesign.horizontalPadding)
     }
 
     private func triggerTranslation() {
@@ -152,7 +162,8 @@ struct TextModeView: View {
             translatedText = ""
             return
         }
-        pinyinText = textProcessor.process(text: inputText) ?? ""
+        let mode: TextProcessor.Mode = settings.isCantonese ? .cantonese : .mandarin
+        pinyinText = textProcessor.process(text: inputText, mode: mode) ?? ""
     }
 
     private func pasteFromClipboard() {
