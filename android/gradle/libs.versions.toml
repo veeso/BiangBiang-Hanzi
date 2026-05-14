@@ -1,17 +1,17 @@
 [versions]
-agp = "8.13.0"
-cameraCore = "1.5.1"
-datastorePreferences = "1.1.7"
-kotlin = "2.2.21"
-coreKtx = "1.17.0"
+agp = "9.2.1"
+cameraCore = "1.6.1"
+datastorePreferences = "1.2.1"
+kotlin = "2.3.21"
+coreKtx = "1.18.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
-kotlinxCoroutinesPlayServices = "1.10.2"
-orgJson = "20240303"
-lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.11.0"
-composeBom = "2025.10.01"
+kotlinxCoroutinesPlayServices = "1.11.0"
+orgJson = "20251224"
+lifecycleRuntimeKtx = "2.10.0"
+activityCompose = "1.13.0"
+composeBom = "2026.05.00"
 material3 = "1.4.0"
 materialIconsExtended = "1.7.8"
 pinyin4j = "2.5.1"
@@ -51,6 +51,5 @@ translate = { module = "com.google.mlkit:translate", version.ref = "translate" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

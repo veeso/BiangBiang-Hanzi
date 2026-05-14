@@ -17,6 +17,7 @@ BiangBiang Hanzi is a dual-platform native mobile app (iOS + Android) that conve
 
 ### Android (Kotlin + Jetpack Compose)
 
+- **JDK (macOS):** Gradle requires a JDK. No system JDK is installed; use the one bundled with Android Studio: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` and prepend `$JAVA_HOME/bin` to `PATH` before invoking `./gradlew`.
 - **Build debug:** `cd android && ./gradlew assembleDebug`
 - **Run unit tests:** `cd android && ./gradlew test`
 - **Run a single test class:** `cd android && ./gradlew test --tests "dev.veeso.biangbianghanzi.TextProcessorTest"`
