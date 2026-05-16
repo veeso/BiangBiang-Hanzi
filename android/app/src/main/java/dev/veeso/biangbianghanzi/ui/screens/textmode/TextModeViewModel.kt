@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
+import dev.veeso.biangbianghanzi.services.AudioPlayerService
 import dev.veeso.biangbianghanzi.services.JyutpingDictionary
 import dev.veeso.biangbianghanzi.services.TextProcessor
 import dev.veeso.biangbianghanzi.ui.AppDesign
@@ -31,6 +32,34 @@ class TextModeViewModel : ViewModel() {
     private var processor: TextProcessor = TextProcessor()
     private var debounceJob: Job? = null
     private var currentMode: TextProcessor.Mode = TextProcessor.Mode.MANDARIN
+
+    private var audio: AudioPlayerService? = null
+    private val _audioState = MutableStateFlow(AudioPlayerService.State.IDLE)
+    val audioState = _audioState.asStateFlow()
+
+    /** Speaks the current Hanzi input aloud, or stops if already speaking. */
+    fun toggleSpeech(context: Context, isCantonese: Boolean) {
+        val service = audio ?: AudioPlayerService(context).also {
+            audio = it
+            viewModelScope.launch { it.state.collect { s -> _audioState.value = s } }
+        }
+        if (_audioState.value == AudioPlayerService.State.SPEAKING) {
+            service.stop()
+            return
+        }
+        val language = if (isCantonese) {
+            AudioPlayerService.Language.CANTONESE
+        } else {
+            AudioPlayerService.Language.MANDARIN
+        }
+        service.speak(_inputText.value, language)
+    }
+
+    override fun onCleared() {
+        audio?.shutdown()
+        audio = null
+        super.onCleared()
+    }
 
     fun setMode(context: Context, isCantonese: Boolean) {
         val newMode = if (isCantonese) TextProcessor.Mode.CANTONESE else TextProcessor.Mode.MANDARIN

@@ -17,11 +17,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -43,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.veeso.biangbianghanzi.R
 import dev.veeso.biangbianghanzi.services.AppSettingsRepository
+import dev.veeso.biangbianghanzi.services.AudioPlayerService
 import dev.veeso.biangbianghanzi.services.CANTONESE
 import dev.veeso.biangbianghanzi.services.SIMPLIFIED_CHINESE
 import dev.veeso.biangbianghanzi.ui.AppDesign
@@ -59,6 +64,7 @@ fun TextModeView(
     val inputText by viewModel.inputText.collectAsState()
     val pinyinText by viewModel.pinyinText.collectAsState()
     val translatedText by viewModel.translatedText.collectAsState()
+    val audioState by viewModel.audioState.collectAsState()
     val chineseType by settingsRepo.chineseType.collectAsState(initial = SIMPLIFIED_CHINESE)
     val context = LocalContext.current
     val clipboard = remember {
@@ -104,6 +110,25 @@ fun TextModeView(
                         .fillMaxWidth()
                         .heightIn(min = 120.dp),
                 )
+            }
+
+            val isSpeaking = audioState == AudioPlayerService.State.SPEAKING
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                OutlinedButton(
+                    onClick = { viewModel.toggleSpeech(context, isCantonese) },
+                    enabled = isSpeaking || inputText.trim().isNotEmpty(),
+                    shape = CircleShape,
+                ) {
+                    Icon(
+                        if (isSpeaking) Icons.Default.Stop else Icons.Default.PlayArrow,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isSpeaking) "Stop" else "Listen")
+                }
             }
 
             SectionView(
