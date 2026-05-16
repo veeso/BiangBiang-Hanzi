@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import dev.veeso.biangbianghanzi.services.OcrBox
 import kotlinx.coroutines.delay
 import kotlin.math.max
+import kotlin.math.min
 
 @Composable
 fun OcrOverlay(
@@ -84,38 +85,31 @@ fun OcrOverlay(
             }
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            // Scale factors to match actual image vs displayed size
-            val scaleX = size.width / imageWidth
-            val scaleY = size.height / imageHeight
-
-            val imageAspect = imageWidth.toFloat() / imageHeight
-            val viewAspect = size.width / size.height
-            var verticalOffset: Float = 0f
-            var horizontalOffset: Float = 0f
-
-            if (isLive) {
-                if (imageAspect > viewAspect) {
-                    val scaledHeight = size.width / imageAspect
-                    verticalOffset = (size.height - scaledHeight) / 4f
-                    horizontalOffset = 0f
-                } else {
-                    val scaledWidth = size.height * imageAspect
-                    horizontalOffset = (size.width - scaledWidth) / 2f
-                    verticalOffset = 0f
-                }
+            // Map ML Kit image-pixel coords to view coords using the SAME
+            // transform the preview uses, so boxes align with what's on screen:
+            //  - live preview: PreviewView.ScaleType.FILL_CENTER -> aspect-fill
+            //    (uniform scale = max, overflow cropped, centered)
+            //  - captured image: ContentScale.Fit -> aspect-fit
+            //    (uniform scale = min, letterboxed, centered)
+            // A single uniform scale + centered offsets covers both: the offset
+            // is negative when filling (cropped) and positive when fitting.
+            val scale = if (isLive) {
+                max(size.width / imageWidth, size.height / imageHeight)
+            } else {
+                min(size.width / imageWidth, size.height / imageHeight)
             }
+            val offsetX = (size.width - imageWidth * scale) / 2f
+            val offsetY = (size.height - imageHeight * scale) / 2f
 
             boxes.forEach { box ->
                 val textToDisplay = if (showPinyin) box.pinyin else box.hanzi
                 val scaleRatio =
                     if (showPinyin) box.hanzi.length.toFloat() / box.pinyin.length.toFloat() else 1f
                 val scaleFactor = scaleRatio.coerceIn(0.6f, 1.0f)
-                val boxHeightScaled = if (isLive) {
-                    (box.height * scaleY) / imageAspect
-                } else {
-                    box.height * scaleY
-                }
-                val dynamicFontSize = (boxHeightScaled * 0.5f * scaleFactor).sp
+                // Font tracks the on-screen box height, with a 12sp floor
+                // (matches iOS RecognizedTextOverlay.minFontSize).
+                val dynamicFontSize =
+                    (box.height * scale * 0.4f * scaleFactor).coerceAtLeast(12f).sp
 
                 val textLayout = textMeasurer.measure(
                     text = textToDisplay,
@@ -128,10 +122,10 @@ fun OcrOverlay(
                 val measuredWidth = textLayout.size.width.toFloat()
                 val measuredHeight = textLayout.size.height.toFloat()
 
-                val width = max(box.width * scaleX, measuredWidth + 12f)
-                val height = max(box.height * scaleY, measuredHeight + 12f)
-                val left = box.left * scaleX + horizontalOffset
-                val top = box.top * scaleY - verticalOffset
+                val width = max(box.width * scale, measuredWidth + 12f)
+                val height = max(box.height * scale, measuredHeight + 12f)
+                val left = box.left * scale + offsetX
+                val top = box.top * scale + offsetY
 
                 renderedBoxes.add(
                     box to android.graphics.RectF(left, top, left + width, top + height)
