@@ -10,6 +10,7 @@ import Translation
 
 struct TextModeView: View {
     @Environment(AppSettings.self) private var settings
+    @Environment(AudioPlayerService.self) private var audio
 
     @State private var inputText: String = ""
     @State private var pinyinText: String = ""
@@ -78,8 +79,31 @@ struct TextModeView: View {
                 .onChange(of: inputText) { _, _ in
                     scheduleDebouncedProcessing()
                 }
+            ttsButton
         }
         .padding(.horizontal, AppDesign.horizontalPadding)
+    }
+
+    private var ttsButton: some View {
+        let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isPlaying = audio.isSpeaking
+        return Button {
+            if isPlaying {
+                audio.stop()
+            } else {
+                let language: AudioPlayerService.Language = settings.isCantonese ? .cantonese : .mandarin
+                audio.speak(inputText, language: language)
+            }
+        } label: {
+            Label(
+                isPlaying ? "Stop" : "Listen",
+                systemImage: isPlaying ? "stop.circle.fill" : "speaker.wave.2.fill"
+            )
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .disabled(trimmed.isEmpty && !isPlaying)
+        .accessibilityHint("Read the Chinese text aloud")
     }
 
     private var pinyinOutputSection: some View {
@@ -196,5 +220,5 @@ private struct ReadOnlyTextBox: View {
 }
 
 #Preview {
-    TextModeView().environment(AppSettings())
+    TextModeView().environment(AppSettings()).environment(AudioPlayerService())
 }
