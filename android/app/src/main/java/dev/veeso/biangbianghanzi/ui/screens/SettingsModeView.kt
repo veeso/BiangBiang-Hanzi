@@ -2,7 +2,6 @@ package dev.veeso.biangbianghanzi.ui.screens
 
 import android.content.Context
 import android.content.Intent
-import android.os.LocaleList
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,9 +30,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.core.os.ConfigurationCompat
 import dev.veeso.biangbianghanzi.services.AppSettingsRepository
 import dev.veeso.biangbianghanzi.services.CANTONESE
 import dev.veeso.biangbianghanzi.services.SIMPLIFIED_CHINESE
@@ -49,7 +50,8 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
     val scope = rememberCoroutineScope()
     var languageSelectExpanded by remember { mutableStateOf(false) }
 
-    val currentLocale: Locale = LocaleList.getDefault().get(0)
+    val locales = ConfigurationCompat.getLocales(LocalConfiguration.current)
+    val currentLocale: Locale = if (locales.isEmpty) Locale.ENGLISH else locales[0]!!
 
     val allLanguages = remember {
         Locale.getAvailableLocales()
@@ -93,7 +95,7 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
                     ) {
                         allLanguages.forEach { locale ->
                             DropdownMenuItem(
-                                text = { Text(locale.getDisplayLanguage(Locale.getDefault())) },
+                                text = { Text(locale.getDisplayLanguage(currentLocale)) },
                                 onClick = {
                                     scope.launch { repo.setTranslationLanguage(locale.language) }
                                     languageSelectExpanded = false

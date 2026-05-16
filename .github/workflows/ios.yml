@@ -1,0 +1,82 @@
+name: iOS CI
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  swiftformat:
+    name: SwiftFormat lint
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+      - name: Lint
+        run: swiftformat --lint ./ios
+
+  build-test:
+    name: Build & Test
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Select newest Xcode
+        run: |
+          set -o pipefail
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Selecting $XCODE"
+          sudo xcode-select -s "$XCODE"
+      - name: Create iOS simulator
+        id: sim
+        run: |
+          set -o pipefail
+          RUNTIME=$(xcrun simctl list runtimes --json \
+            | jq -r '[.runtimes[] | select(.isAvailable == true and (.identifier | contains("iOS")))]
+                     | sort_by(.version) | last | .identifier')
+          DEVTYPE=$(xcrun simctl list devicetypes --json \
+            | jq -r '[.devicetypes[] | select(.name | test("^iPhone [0-9]+$"))]
+                     | sort_by(.name | capture("(?<n>[0-9]+)").n | tonumber)
+                     | last | .identifier')
+          if [ -z "$RUNTIME" ] || [ "$RUNTIME" = "null" ] || [ -z "$DEVTYPE" ] || [ "$DEVTYPE" = "null" ]; then
+            echo "No usable iOS runtime/device type" >&2
+            xcrun simctl list runtimes >&2
+            exit 1
+          fi
+          echo "Runtime=$RUNTIME DeviceType=$DEVTYPE"
+          SIM_ID=$(xcrun simctl create ci-iphone "$DEVTYPE" "$RUNTIME")
+          xcrun simctl boot "$SIM_ID" || true
+          echo "sim_id=$SIM_ID" >> "$GITHUB_OUTPUT"
+      - name: Build & Test
+        env:
+          SIM_ID: ${{ steps.sim.outputs.sim_id }}
+        run: |
+          set -o pipefail
+          echo "Using simulator $SIM_ID"
+          xcodebuild test \
+            -project "ios/BiangBiang Hanzi.xcodeproj" \
+            -scheme "BiangBiang Hanzi" \
+            -destination "platform=iOS Simulator,id=$SIM_ID" \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify
+        # xcbeautify preinstalled on macos-15 runners
