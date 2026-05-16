@@ -48,6 +48,10 @@ object OcrService {
                     )
                 }
             }
+            // Drop spurious giant detections (see LiveOcrAnalyzer).
+            .filter { b ->
+                b.height < bitmap.height * 0.5f && b.width < bitmap.width * 0.9f
+            }
 
     }
 
@@ -103,7 +107,21 @@ class LiveOcrAnalyzer(
                             )
                         }
                     }
-                onResult(boxes, image.width, image.height)
+                // ML Kit returns bounding boxes in the upright/display
+                // coordinate space (rotation already applied), but
+                // image.width/height are the unrotated buffer dims. Swap
+                // for 90/270 so the overlay scales against the same space
+                // the boxes are in.
+                val rotated = rotationDegrees == 90 || rotationDegrees == 270
+                val uprightWidth = if (rotated) image.height else image.width
+                val uprightHeight = if (rotated) image.width else image.height
+                // Drop spurious detections: a real text element never spans
+                // half the frame height (or nearly its full width). These
+                // garbage boxes are what render as random HUGE text.
+                val sane = boxes.filter { b ->
+                    b.height < uprightHeight * 0.5f && b.width < uprightWidth * 0.9f
+                }
+                onResult(sane, uprightWidth, uprightHeight)
             }
             .addOnFailureListener { /* ignore for now */ }
             .addOnCompleteListener { imageProxy.close() }
