@@ -13,8 +13,8 @@ android {
         applicationId = "dev.veeso.biangbianghanzi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 40
-        versionName = "0.4.0"
+        versionCode = 50
+        versionName = "0.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
