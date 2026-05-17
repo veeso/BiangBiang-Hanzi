@@ -12,6 +12,10 @@ struct BiangBiang_HanziApp: App {
     @State private var settings = AppSettings()
     @State private var audio = AudioPlayerService()
 
+    init() {
+        settings.registerLaunch()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
