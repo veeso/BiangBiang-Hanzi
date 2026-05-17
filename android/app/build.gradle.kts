@@ -34,6 +34,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -74,5 +75,6 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.text.recognition.chinese)
+    implementation(libs.play.review.ktx)
 
 }

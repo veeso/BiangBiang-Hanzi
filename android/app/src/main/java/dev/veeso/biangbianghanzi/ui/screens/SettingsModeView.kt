@@ -35,11 +35,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.core.os.ConfigurationCompat
+import dev.veeso.biangbianghanzi.BuildConfig
 import dev.veeso.biangbianghanzi.services.AppSettingsRepository
 import dev.veeso.biangbianghanzi.services.CANTONESE
 import dev.veeso.biangbianghanzi.services.SIMPLIFIED_CHINESE
+import dev.veeso.biangbianghanzi.services.ReviewPromptPolicy
 import dev.veeso.biangbianghanzi.services.TRADITIONAL_CHINESE
 import dev.veeso.biangbianghanzi.ui.AppDesign
+import dev.veeso.biangbianghanzi.ui.components.launchInAppReview
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -59,6 +62,10 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
             .distinctBy { it.displayLanguage }
             .sortedBy { it.displayLanguage }
     }
+
+    val reviewLaunchCount by repo.reviewLaunchCount.collectAsState(initial = 0)
+    val reviewDismissed by repo.reviewPromptDismissed.collectAsState(initial = false)
+    val reviewAttempts by repo.reviewAttempts.collectAsState(initial = 0)
 
     val chineseType by repo.chineseType.collectAsState(initial = SIMPLIFIED_CHINESE)
     val translationLanguage by repo.translationLanguage.collectAsState(
@@ -142,6 +149,26 @@ fun SettingsModeView(repo: AppSettingsRepository = AppSettingsRepository(LocalCo
                     }
                     Button(onClick = { sendBugEmail(context) }) {
                         Text("Send Email")
+                    }
+                }
+            }
+
+            if (BuildConfig.DEBUG) {
+                SettingsSection(title = "Debug") {
+                    Text(
+                        "review launchCount=$reviewLaunchCount dismissed=$reviewDismissed " +
+                            "attempts=$reviewAttempts/${ReviewPromptPolicy.MAX_ATTEMPTS} " +
+                            "(fires at ${ReviewPromptPolicy.LAUNCH_THRESHOLD})",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { scope.launch { repo.resetReviewPrompt() } }) {
+                            Text("Reset")
+                        }
+                        Button(onClick = { scope.launch { launchInAppReview(context) } }) {
+                            Text("Force review now")
+                        }
                     }
                 }
             }
