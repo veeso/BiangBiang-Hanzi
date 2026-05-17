@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import dev.veeso.biangbianghanzi.ui.components.ReviewPrompt
 import dev.veeso.biangbianghanzi.ui.screens.CameraModeView
 import dev.veeso.biangbianghanzi.ui.screens.HistoryModeView
 import dev.veeso.biangbianghanzi.ui.screens.SettingsModeView
@@ -57,6 +58,7 @@ fun MainScreen() {
                 Tab.History -> HistoryModeView()
                 Tab.Settings -> SettingsModeView()
             }
+            ReviewPrompt()
         }
     }
 }
