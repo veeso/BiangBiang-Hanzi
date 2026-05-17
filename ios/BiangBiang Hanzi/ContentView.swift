@@ -15,7 +15,15 @@ struct ContentView: View {
         case history
     }
 
+    static let appStoreID = "6754869174"
+    static let writeReviewURL = URL(
+        string: "https://apps.apple.com/app/id6754869174?action=write-review"
+    )!
+
+    @Environment(AppSettings.self) private var settings
+    @Environment(\.openURL) private var openURL
     @State private var selection: AppTab = .text
+    @State private var showReviewPrompt = false
 
     var body: some View {
         TabView(selection: $selection) {
@@ -31,6 +39,28 @@ struct ContentView: View {
             Tab("Settings", systemImage: "gear", value: AppTab.settings) {
                 SettingsView()
             }
+        }
+        .task {
+            showReviewPrompt = ReviewPromptPolicy.shouldShow(
+                launchCount: settings.reviewLaunchCount,
+                dismissed: settings.reviewPromptDismissed
+            )
+        }
+        .alert("Enjoying BiangBiang Hanzi?", isPresented: $showReviewPrompt) {
+            Button("Rate now") {
+                settings.dismissForever()
+                openURL(Self.writeReviewURL)
+            }
+            Button("Not now", role: .cancel) {
+                settings.notNow()
+            }
+            Button("Don't ask again", role: .destructive) {
+                settings.dismissForever()
+            }
+        } message: {
+            Text(
+                "If BiangBiang Hanzi has been helpful, a quick rating on the App Store really helps. It only takes a moment."
+            )
         }
     }
 }

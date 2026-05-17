@@ -37,6 +37,14 @@ final class AppSettings {
         }
     }
 
+    var reviewLaunchCount: Int {
+        didSet { userDefaults.set(reviewLaunchCount, forKey: "review_launch_count") }
+    }
+
+    var reviewPromptDismissed: Bool {
+        didSet { userDefaults.set(reviewPromptDismissed, forKey: "review_prompt_dismissed") }
+    }
+
     private let userDefaults: UserDefaults
 
     init(
@@ -57,6 +65,8 @@ final class AppSettings {
         } else {
             history = []
         }
+        reviewLaunchCount = userDefaults.integer(forKey: "review_launch_count")
+        reviewPromptDismissed = userDefaults.bool(forKey: "review_prompt_dismissed")
     }
 
     func addHistory(original: String, transliteration: String, variant: HistoryVariant) {
@@ -70,5 +80,20 @@ final class AppSettings {
 
     func clearHistory() {
         history = HistoryStore.clear()
+    }
+
+    /// Increment the cold-launch counter, capped per policy. Call once per process launch.
+    func registerLaunch() {
+        reviewLaunchCount = ReviewPromptPolicy.nextLaunchCount(reviewLaunchCount)
+    }
+
+    /// "Not now": reset the counter, keep prompting after 3 more launches.
+    func notNow() {
+        reviewLaunchCount = 0
+    }
+
+    /// "Rate now" / "Don't ask again": never show the prompt again.
+    func dismissForever() {
+        reviewPromptDismissed = true
     }
 }

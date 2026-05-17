@@ -11,6 +11,10 @@ struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(\.openURL) private var openURL
 
+    #if DEBUG
+        @State private var showResetToast = false
+    #endif
+
     private static let availableLanguages: [(id: String, name: String)] =
         Locale.availableIdentifiers.map { id in
             (
@@ -75,9 +79,37 @@ struct SettingsView: View {
                 } header: {
                     Label("Report a bug", systemImage: "ladybug")
                 }
+
+                #if DEBUG
+                    Section {
+                        Button("Reset review prompt", systemImage: "arrow.counterclockwise") {
+                            settings.reviewPromptDismissed = false
+                            settings.reviewLaunchCount = 0
+                            showResetToast = true
+                        }
+                    } header: {
+                        Label("Debug", systemImage: "hammer")
+                    } footer: {
+                        Text("Clears dismissed flag and launch count. Restart the app to re-trigger after 3 launches.")
+                    }
+                #endif
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            #if DEBUG
+                .overlay(alignment: .bottom) {
+                    if showResetToast {
+                        CopyToast(message: "Review prompt reset")
+                            .padding(.bottom, 24)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .task {
+                                try? await Task.sleep(for: .seconds(2))
+                                showResetToast = false
+                            }
+                    }
+                }
+                .animation(.easeInOut, value: showResetToast)
+            #endif
         }
     }
 
