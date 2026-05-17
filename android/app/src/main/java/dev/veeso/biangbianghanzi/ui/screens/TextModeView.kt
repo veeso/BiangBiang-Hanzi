@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.PlayArrow
@@ -30,12 +31,15 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.veeso.biangbianghanzi.R
+import dev.veeso.biangbianghanzi.models.HistoryVariant
 import dev.veeso.biangbianghanzi.services.AppSettingsRepository
 import dev.veeso.biangbianghanzi.services.AudioPlayerService
 import dev.veeso.biangbianghanzi.services.CANTONESE
@@ -54,6 +59,7 @@ import dev.veeso.biangbianghanzi.ui.AppDesign
 import dev.veeso.biangbianghanzi.ui.components.SectionView
 import dev.veeso.biangbianghanzi.ui.screens.textmode.TextModeViewModel
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -71,10 +77,14 @@ fun TextModeView(
         context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
     val isCantonese = chineseType == CANTONESE
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(isCantonese) { viewModel.setMode(context, isCantonese) }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -128,6 +138,30 @@ fun TextModeView(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(if (isSpeaking) "Stop" else "Listen")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            settingsRepo.addHistory(
+                                original = inputText,
+                                transliteration = pinyinText,
+                                variant = if (isCantonese)
+                                    HistoryVariant.CANTONESE
+                                else HistoryVariant.MANDARIN,
+                            )
+                            snackbarHostState.showSnackbar("Saved to history")
+                        }
+                    },
+                    enabled = pinyinText.trim().isNotEmpty(),
+                    shape = CircleShape,
+                ) {
+                    Icon(
+                        Icons.Default.BookmarkAdd,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Save")
                 }
             }
 
