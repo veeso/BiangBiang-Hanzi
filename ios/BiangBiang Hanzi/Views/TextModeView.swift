@@ -17,6 +17,8 @@ struct TextModeView: View {
     @State private var translatedText: String = ""
     @State private var debounceTask: Task<Void, Never>?
     @State private var translateConfig: TranslationSession.Configuration?
+    @State private var showSavedToast = false
+    @State private var savedToastTask: Task<Void, Never>?
     @FocusState private var inputFocused: Bool
 
     private let textProcessor = TextProcessor()
@@ -58,6 +60,21 @@ struct TextModeView: View {
                 Button("Done") { inputFocused = false }
             }
         }
+        .overlay(alignment: .bottom) {
+            if showSavedToast {
+                Text("Saved to History")
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial)
+                    .clipShape(.rect(cornerRadius: AppDesign.cornerRadius))
+                    .shadow(radius: 6)
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .allowsHitTesting(false)
+            }
+        }
+        .sensoryFeedback(.success, trigger: showSavedToast)
     }
 
     private var hanziInputSection: some View {
@@ -79,7 +96,10 @@ struct TextModeView: View {
                 .onChange(of: inputText) { _, _ in
                     scheduleDebouncedProcessing()
                 }
-            ttsButton
+            HStack {
+                ttsButton
+                saveButton
+            }
         }
         .padding(.horizontal, AppDesign.horizontalPadding)
     }
@@ -104,6 +124,31 @@ struct TextModeView: View {
         .buttonBorderShape(.capsule)
         .disabled(trimmed.isEmpty && !isPlaying)
         .accessibilityHint("Read the Chinese text aloud")
+    }
+
+    private var saveButton: some View {
+        Button {
+            let variant: HistoryVariant =
+                settings.isCantonese ? .cantonese : .mandarin
+            settings.addHistory(
+                original: inputText,
+                transliteration: pinyinText,
+                variant: variant
+            )
+            savedToastTask?.cancel()
+            withAnimation { showSavedToast = true }
+            savedToastTask = Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                guard !Task.isCancelled else { return }
+                withAnimation { showSavedToast = false }
+            }
+        } label: {
+            Label("Save", systemImage: "bookmark.fill")
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .disabled(pinyinText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .accessibilityHint("Save this entry to History")
     }
 
     private var pinyinOutputSection: some View {

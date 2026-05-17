@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct CopyToast: View {
+    var message: String = "Text copied"
+
     var body: some View {
-        Text("Text copied")
+        Text(message)
             .font(.subheadline.weight(.semibold))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

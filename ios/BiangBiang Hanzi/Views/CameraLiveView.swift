@@ -43,6 +43,19 @@ struct CameraLiveView: View {
                     }
                 }
 
+                if !cameraModel.recognizedTexts.isEmpty {
+                    VStack {
+                        Text("Tap to copy · long-press to save")
+                            .font(.caption2)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(.ultraThinMaterial, in: Capsule())
+                            .padding(.top, 8)
+                        Spacer()
+                    }
+                    .allowsHitTesting(false)
+                }
+
                 VStack {
                     Spacer()
                     if cameraModel.capturedImage == nil
@@ -62,10 +75,24 @@ struct CameraLiveView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .allowsHitTesting(false)
                 }
+
+                if cameraModel.showSavedToast {
+                    VStack {
+                        Spacer()
+                        CopyToast(message: "Saved to History")
+                            .padding(.bottom, AppDesign.bottomToolbarPadding + 44)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .allowsHitTesting(false)
+                }
             }
             .animation(
                 .easeOut(duration: AppDesign.toastAnimation),
                 value: cameraModel.showCopiedToast
+            )
+            .animation(
+                .easeOut(duration: AppDesign.toastAnimation),
+                value: cameraModel.showSavedToast
             )
         }
         .simultaneousGesture(

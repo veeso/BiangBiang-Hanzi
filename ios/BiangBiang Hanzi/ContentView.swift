@@ -12,6 +12,7 @@ struct ContentView: View {
         case text
         case camera
         case settings
+        case history
     }
 
     @State private var selection: AppTab = .text
@@ -23,6 +24,9 @@ struct ContentView: View {
             }
             Tab("Camera", systemImage: "camera", value: AppTab.camera) {
                 CameraModeView()
+            }
+            Tab("History", systemImage: "clock.fill", value: AppTab.history) {
+                HistoryView()
             }
             Tab("Settings", systemImage: "gear", value: AppTab.settings) {
                 SettingsView()
