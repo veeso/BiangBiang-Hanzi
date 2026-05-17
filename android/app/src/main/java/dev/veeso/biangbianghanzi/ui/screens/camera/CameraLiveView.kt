@@ -35,12 +35,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,14 +61,19 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.veeso.biangbianghanzi.R
 import dev.veeso.biangbianghanzi.capturePhoto
+import dev.veeso.biangbianghanzi.models.HistoryVariant
+import dev.veeso.biangbianghanzi.services.AppSettingsRepository
+import dev.veeso.biangbianghanzi.services.CANTONESE
 import dev.veeso.biangbianghanzi.services.LiveOcrAnalyzer
 import dev.veeso.biangbianghanzi.services.OcrBox
 import dev.veeso.biangbianghanzi.services.OcrService
+import dev.veeso.biangbianghanzi.services.SIMPLIFIED_CHINESE
 import dev.veeso.biangbianghanzi.services.availablePresets
 import dev.veeso.biangbianghanzi.services.clampZoom
 import dev.veeso.biangbianghanzi.ui.AppDesign
 import dev.veeso.biangbianghanzi.ui.components.CopyToast
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @Composable
@@ -82,6 +89,7 @@ fun CameraLiveView() {
     var maxZoom by remember { mutableFloatStateOf(1f) }
     var presets by remember { mutableStateOf(listOf(1f)) }
     var showCopyToast by remember { mutableStateOf(false) }
+    var showSavedToast by remember { mutableStateOf(false) }
 
     LaunchedEffect(showCopyToast) {
         if (showCopyToast) {
@@ -90,7 +98,31 @@ fun CameraLiveView() {
         }
     }
 
+    LaunchedEffect(showSavedToast) {
+        if (showSavedToast) {
+            delay(1500)
+            showSavedToast = false
+        }
+    }
+
     val context = LocalContext.current
+    val settingsRepo = remember { AppSettingsRepository(context) }
+    val chineseType by settingsRepo.chineseType.collectAsState(initial = SIMPLIFIED_CHINESE)
+    val isCantonese = chineseType == CANTONESE
+    val scope = rememberCoroutineScope()
+
+    val saveBox: (OcrBox) -> Unit = { box ->
+        scope.launch {
+            settingsRepo.addHistory(
+                original = box.hanzi,
+                transliteration = box.pinyin,
+                variant = if (isCantonese) HistoryVariant.CANTONESE
+                else HistoryVariant.MANDARIN,
+            )
+        }
+        showSavedToast = true
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val analyzer = remember {
@@ -198,6 +230,7 @@ fun CameraLiveView() {
                     isLive = true,
                     showPinyin = convertToPinyin,
                     onTextCopied = { showCopyToast = true },
+                    onSaveBox = saveBox,
                 )
 
                 Column(
@@ -247,6 +280,7 @@ fun CameraLiveView() {
                     isLive = false,
                     showPinyin = convertToPinyin,
                     onTextCopied = { showCopyToast = true },
+                    onSaveBox = saveBox,
                 )
 
                 FilledTonalIconButton(
@@ -259,12 +293,32 @@ fun CameraLiveView() {
                 }
             }
 
+            val anyBoxes =
+                if (capturedImage == null) liveOcrBoxes.isNotEmpty()
+                else ocrBoxes.isNotEmpty()
+            if (anyBoxes) {
+                Text(
+                    text = "Tap to copy · long-press to save",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = AppDesign.stackSpacing),
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = AppDesign.bottomToolbarPadding),
             ) {
-                CopyToast(visible = showCopyToast)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    CopyToast(visible = showSavedToast, message = "Saved to History")
+                    CopyToast(visible = showCopyToast)
+                }
             }
         }
     }

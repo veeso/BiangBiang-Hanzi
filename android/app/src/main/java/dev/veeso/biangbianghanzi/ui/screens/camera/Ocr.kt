@@ -43,6 +43,7 @@ fun OcrOverlay(
     isLive: Boolean,
     showPinyin: Boolean,
     onTextCopied: (() -> Unit)? = null,
+    onSaveBox: ((OcrBox) -> Unit)? = null,
 ) {
     val textMeasurer = rememberTextMeasurer()
     val context = LocalContext.current
@@ -68,20 +69,31 @@ fun OcrOverlay(
     Box(
         modifier = modifier
             .pointerInput(boxes, showPinyin, imageWidth, imageHeight) {
-                detectTapGestures { offset ->
-                    val hit = renderedBoxes.firstOrNull { (_, rect) ->
+                fun hitBox(offset: Offset): OcrBox? =
+                    renderedBoxes.firstOrNull { (_, rect) ->
                         rect.contains(offset.x, offset.y)
                     }?.first
-                    hit?.let { box ->
-                        val text = if (showPinyin) box.pinyin else box.hanzi
-                        val clipboard =
-                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("OCR text", text))
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        highlightedBox = box
-                        onTextCopied?.invoke()
-                    }
-                }
+
+                detectTapGestures(
+                    onTap = { offset ->
+                        hitBox(offset)?.let { box ->
+                            val text = if (showPinyin) box.pinyin else box.hanzi
+                            val clipboard =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("OCR text", text))
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            highlightedBox = box
+                            onTextCopied?.invoke()
+                        }
+                    },
+                    onLongPress = { offset ->
+                        hitBox(offset)?.let { box ->
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            highlightedBox = box
+                            onSaveBox?.invoke(box)
+                        }
+                    },
+                )
             }
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
