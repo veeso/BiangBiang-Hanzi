@@ -29,15 +29,46 @@ final class AppSettings {
         chineseVariant == Self.cantonese
     }
 
+    var history: [HistoryEntry] {
+        didSet {
+            if let data = try? JSONEncoder().encode(history) {
+                userDefaults.set(data, forKey: "history")
+            }
+        }
+    }
+
+    private let userDefaults: UserDefaults
+
     init(
         userDefaults: UserDefaults = .standard,
         defaultLanguage: String = Locale.current.language.languageCode?
             .identifier ?? "en",
         defaultChineseVariant: String = "zh-Hans"
     ) {
+        self.userDefaults = userDefaults
         userLanguage =
             userDefaults.string(forKey: "user_language") ?? defaultLanguage
         chineseVariant =
             userDefaults.string(forKey: "chinese") ?? defaultChineseVariant
+        if let data = userDefaults.data(forKey: "history"),
+           let decoded = try? JSONDecoder().decode([HistoryEntry].self, from: data)
+        {
+            history = decoded
+        } else {
+            history = []
+        }
+    }
+
+    func addHistory(original: String, transliteration: String, variant: HistoryVariant) {
+        let entry = HistoryEntry(original: original, transliteration: transliteration, variant: variant)
+        history = HistoryStore.insert(entry, into: history)
+    }
+
+    func deleteHistory(id: UUID) {
+        history = HistoryStore.delete(id: id, from: history)
+    }
+
+    func clearHistory() {
+        history = HistoryStore.clear()
     }
 }

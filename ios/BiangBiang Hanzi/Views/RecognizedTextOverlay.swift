@@ -10,6 +10,7 @@ import SwiftUI
 import UIKit
 
 struct RecognizedTextOverlay: View {
+    @Environment(AppSettings.self) private var settings
     @State private var isCopied = false
     @State private var measuredSize: CGSize = .zero
 
@@ -81,6 +82,22 @@ struct RecognizedTextOverlay: View {
             .background(sizeReader)
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.3).onEnded { _ in
+                let variant: HistoryVariant =
+                    settings.isCantonese ? .cantonese : .mandarin
+                settings.addHistory(
+                    original: hanzi,
+                    transliteration: pinyin,
+                    variant: variant
+                )
+                cameraModel.showSavedToast = true
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    cameraModel.showSavedToast = false
+                }
+            }
+        )
         .frame(
             minWidth: Self.minTapTarget,
             minHeight: Self.minTapTarget
@@ -95,7 +112,7 @@ struct RecognizedTextOverlay: View {
             new
         }
         .accessibilityLabel(Text(textToDisplay))
-        .accessibilityHint("Copy to clipboard")
+        .accessibilityHint("Tap to copy, long-press to save to History")
     }
 
     private var sizeReader: some View {

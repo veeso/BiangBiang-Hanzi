@@ -35,6 +35,8 @@ final class CameraModel: NSObject, AVCapturePhotoCaptureDelegate,
     var showPinyin: Bool = true
     /// Show copied toast
     var showCopiedToast: Bool = false
+    /// Show saved-to-history toast
+    var showSavedToast: Bool = false
 
     /// Currently active capture device. Used for zoom configuration.
     @ObservationIgnored private var device: AVCaptureDevice?
