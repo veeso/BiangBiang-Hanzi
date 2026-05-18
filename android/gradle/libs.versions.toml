@@ -1,5 +1,6 @@
 [versions]
 agp = "9.2.1"
+biangbiangui = "v0.1.3"
 cameraCore = "1.6.1"
 datastorePreferences = "1.2.1"
 kotlin = "2.3.21"
@@ -20,6 +21,7 @@ textRecognitionChinese = "16.0.1"
 translate = "17.0.3"
 
 [libraries]
+biangbiang-ui = { module = "com.github.veeso:BiangBiangUI", version.ref = "biangbiangui" }
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
 androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraCore" }
 androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCore" }
