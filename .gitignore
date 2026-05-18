@@ -11,6 +11,12 @@ xcuserdata/
 # CocoaPods
 Pods/
 *.xcworkspace
+# Keep SwiftPM Package.resolved (needed by Xcode Cloud)
+!**/*.xcworkspace/
+!**/*.xcworkspace/xcshareddata/
+!**/*.xcworkspace/xcshareddata/swiftpm/
+!**/*.xcworkspace/xcshareddata/swiftpm/Package.resolved
+**/*.xcworkspace/contents.xcworkspacedata
 
 # Others
 .DS_Store
