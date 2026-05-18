@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.5.0](#050)
   - [0.4.0](#040)
   - [0.3.1](#031)
   - [0.3.0](#030)
@@ -10,6 +11,21 @@ All notable changes to this project will be documented in this file.
   - [0.1.3](#013)
   - [0.1.2](#012)
   - [0.1.1](#011)
+
+## 0.5.0
+
+Released on 18/05/2026
+
+- Added audio playback for Hanzi text:
+  - New `AudioPlayerService` built on `AVSpeechSynthesizer` with Mandarin/Cantonese voice selection wired to the Chinese variant setting.
+  - Listen/Stop control in text mode.
+- Added a History feature:
+  - New History tab listing explicitly-saved Hanzi entries, backed by a pure `HistoryStore` (prepend, consecutive dedup by original + variant, silent 500-entry cap, delete, clear) persisted via `UserDefaults`.
+  - Ephemeral Original/Transliterated toggle, expand/collapse rows, per-entry play/stop TTS, swipe-delete, Clear All and an empty state.
+  - Save button in the Text tab and long-press on an OCR box (tap still copies), each with a confirmation toast.
+- Added a rate-the-app prompt: a custom dialog shown on cold launch after 3+ launches that gates the App Store write-review flow, with cap and dismiss-forever logic.
+- Migrated the entire UI layer to the shared **BiangBiangUI** Swift package, replacing the local SwiftUI views, camera, `TextProcessor`, history, settings and review-prompt code with `Config` and transliterator wrappers.
+- Added CI: SwiftFormat lint plus `xcodebuild` build and test on macOS.
 
 ## 0.4.0
 
