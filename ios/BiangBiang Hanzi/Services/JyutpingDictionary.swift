@@ -5,7 +5,7 @@
 
 import Foundation
 
-final class JyutpingDictionary {
+final class JyutpingDictionary: Sendable {
     static let shared = JyutpingDictionary()
 
     private let table: [String: String]
