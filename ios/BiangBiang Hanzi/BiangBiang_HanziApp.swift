@@ -4,23 +4,19 @@
 //
 //  Created by christian visintin on 31/10/25.
 //
+//  Config-only entry point: the BiangBiangUI library renders every screen
+//  and owns History, the rate prompt, TTS and the OCR pipeline. The app
+//  supplies only `ChineseConfig` + two transliterators.
+//
 
+import BiangBiangUI
 import SwiftUI
 
 @main
 struct BiangBiang_HanziApp: App {
-    @State private var settings = AppSettings()
-    @State private var audio = AudioPlayerService()
-
-    init() {
-        settings.registerLaunch()
-    }
-
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(settings)
-                .environment(audio)
+            BiangBiangRootView(config: ChineseConfig.chineseConfig)
         }
     }
 }
