@@ -56,6 +56,13 @@ Uses Google ML Kit Translate for translation. Dependency versions managed in `an
 
 The TextProcessor detects Hanzi characters (Unicode U+4E00–U+9FFF), converts them to Pinyin with tone marks, and preserves non-Hanzi characters (Latin letters, numbers, punctuation, emoji) in place. OCR uses 1-second throttling; text input is debounced at 0.8s.
 
+### UI Framework — BiangBiangUI
+
+Both apps depend on the shared **BiangBiangUI** library (<https://github.com/veeso/BiangBiangUI>) for essentially the entire user interface — screens, navigation, components, and theming all build on it. Treat it as a hard dependency: nearly every view in both the iOS and Android app relies on it, so changes to its API ripple across the whole UI layer.
+
+- **iOS:** Swift Package Manager dependency declared in `ios/BiangBiang Hanzi.xcodeproj/project.pbxproj` (pinned in `Package.resolved`)
+- **Android:** version `biangbiangui` in `android/gradle/libs.versions.toml`, consumed as `libs.biangbiang.ui`
+
 ## Platform Configuration
 
 - **iOS:** Min deployment target uses iOS 15+ Translation API. Info.plist at `ios/BiangBiang-Hanzi-Info.plist`
