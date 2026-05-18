@@ -45,20 +45,21 @@ kotlin {
 }
 
 dependencies {
+    // The shared library: renders every screen, owns History, rate prompt,
+    // TTS and the OCR pipeline. Its camera / ML Kit / DataStore / Translate
+    // deps arrive transitively at runtime via the JitPack POM.
+    implementation(libs.biangbiang.ui)
+
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.translate)
+
+    // App-only Mandarin romaniser; never referenced by the library.
+    implementation(libs.pinyin4j)
+
     testImplementation(libs.junit)
     testImplementation(libs.org.json)
     androidTestImplementation(libs.androidx.junit)
@@ -67,14 +68,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.pinyin4j)
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
-    implementation(libs.androidx.camera.extensions)
-    implementation(libs.kotlinx.coroutines.play.services)
-    implementation(libs.text.recognition.chinese)
-    implementation(libs.play.review.ktx)
-
 }
