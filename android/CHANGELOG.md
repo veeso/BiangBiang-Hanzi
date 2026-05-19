@@ -3,12 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.5.1](#051)
   - [0.5.0](#050)
   - [0.4.0](#040)
   - [0.3.1](#031)
   - [0.3.0](#030)
   - [0.2.0](#020)
   - [0.1.1](#011)
+
+## 0.5.1
+
+Released on 19/05/2026
+
+- Fixed a bug causing the app to crash on the OCR view randomly after extended use.
 
 ## 0.5.0
 

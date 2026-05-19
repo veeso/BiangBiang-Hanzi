@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.5.1](#051)
   - [0.5.0](#050)
   - [0.4.0](#040)
   - [0.3.1](#031)
@@ -11,6 +12,12 @@ All notable changes to this project will be documented in this file.
   - [0.1.3](#013)
   - [0.1.2](#012)
   - [0.1.1](#011)
+
+## 0.5.1
+
+Released on 19/05/2026
+
+- Updated app icon with iOS 26 style
 
 ## 0.5.0
 
