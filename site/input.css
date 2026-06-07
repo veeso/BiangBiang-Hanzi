@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Body font — Sora (self-hosted, latin + latin-ext)
+   ───────────────────────────────────────────────────────────── */
+/* latin-ext */
 @font-face {
   font-family: "Sora";
   font-style: normal;
@@ -48,11 +52,39 @@
     U+FEFF, U+FFFD;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Design tokens — PORTABLE.
+   This file is identical between BiangBiang Hanzi and Kana.
+   Per-app accent lives in tailwind.config.js as `brand`
+   (Hanzi #DE2910 · Kana #BC002D) and is read via var(--brand).
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --paper: #f5efe3;
+  --paper-2: #efe6d4;
+  --paper-3: #e8ddc6;
+  --ink: #211a12;
+  --ink-soft: #5b5042;
+  --line: #ddd0b6;
+  /* mirrors theme.colors.brand so CSS effects (glows, seals) stay
+     in sync with whatever the app's tailwind brand color is */
+  --brand: #de2910;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
+  background-color: var(--paper);
+  /* warm paper grain: layered radial speckle + faint diagonal weave */
+  background-image: radial-gradient(
+      circle at 50% 0%,
+      var(--paper-2) 0%,
+      var(--paper) 45%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+  color: var(--ink);
   font-family: "Sora", sans-serif;
   margin: 0;
   min-width: 100vw;
@@ -60,21 +92,14 @@ body {
   padding: 0;
 }
 
-main {
-  padding-top: 5rem;
+/* Display face — Fraunces (Latin) + Noto Serif SC (Hanzi), loaded via
+   Google Fonts <link> in the page head. Characterful editorial serif. */
+.font-display {
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-optical-sizing: auto;
 }
-
-p {
-  font-weight: 300;
-}
-
-input {
-  font-family: "Sora", sans-serif;
-  font-size: 1em;
-}
-
-textarea {
-  font-family: "Sora", sans-serif;
+.font-hanzi {
+  font-family: "Noto Serif SC", "Fraunces", serif;
 }
 
 h1,
@@ -87,43 +112,164 @@ h6 {
   margin-bottom: 0.5rem;
 }
 
-button {
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-button,
-input {
-  margin: 0;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+p {
+  font-weight: 300;
 }
 
 a {
   text-decoration: none;
 }
 
-a:hover {
-  text-decoration: none;
+button {
+  box-sizing: border-box;
+  cursor: pointer;
 }
 
-.device.device-iphone-14-pro {
-  transform: scale(1);
-  transform-origin: top center;
-}
+/* ─────────────────────────────────────────────────────────────
+   Components
+   ───────────────────────────────────────────────────────────── */
+@layer components {
+  /* Vermilion seal stamp (印章). Decorative red square w/ white glyph. */
+  .seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--brand);
+    color: var(--paper);
+    border-radius: 0.4rem;
+    box-shadow: 0 6px 18px -6px var(--brand);
+    font-family: "Noto Serif SC", serif;
+    line-height: 1;
+    user-select: none;
+  }
 
-/* Schermi medi */
-@media (max-width: 1024px) {
-  .device.device-iphone-14-pro {
-    transform: scale(0.8);
+  /* Primary download button — solid vermilion */
+  .btn-vermilion {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    background-color: var(--brand);
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 0.9rem 1.4rem;
+    border-radius: 0.7rem;
+    box-shadow: 0 10px 30px -10px var(--brand);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .btn-vermilion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px -10px var(--brand);
+  }
+
+  /* Translucent sticky header (Tailwind can't apply /opacity to a
+     var() color, so do it here with color-mix) */
+  .site-header {
+    background-color: color-mix(in srgb, var(--paper) 86%, transparent);
+  }
+
+  /* Hairline ink-on-paper card */
+  .paper-card {
+    background-color: rgba(255, 255, 255, 0.45);
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    backdrop-filter: blur(2px);
+  }
+
+  /* Section eyebrow label */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 1.6rem;
+    height: 1px;
+    background-color: var(--brand);
+  }
+
+  /* Phone screenshot frame */
+  .device-frame {
+    border-radius: 2.2rem;
+    padding: 0.5rem;
+    background: linear-gradient(160deg, #2a2118, #100c08);
+    box-shadow: 0 40px 80px -30px rgba(33, 26, 18, 0.55),
+      0 8px 24px -12px rgba(33, 26, 18, 0.4);
+  }
+  .device-frame img {
+    border-radius: 1.8rem;
+    display: block;
   }
 }
 
-/* Schermi piccoli (smartphone) */
-@media (max-width: 640px) {
-  .device.device-iphone-14-pro {
-    transform: scale(0.6);
-    margin-bottom: -300px; /* regola a occhio */
+/* ─────────────────────────────────────────────────────────────
+   Motion — single orchestrated page-load reveal (staggered)
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: reveal-up 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  .reveal-d1 {
+    animation-delay: 0.08s;
+  }
+  .reveal-d2 {
+    animation-delay: 0.18s;
+  }
+  .reveal-d3 {
+    animation-delay: 0.3s;
+  }
+  .reveal-d4 {
+    animation-delay: 0.44s;
+  }
+  .reveal-d5 {
+    animation-delay: 0.6s;
+  }
+
+  @keyframes reveal-up {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slow drift on the giant ghost character */
+  .ghost-drift {
+    animation: ghost-drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes ghost-drift {
+    from {
+      transform: translateY(-1.5%) rotate(-1deg);
+    }
+    to {
+      transform: translateY(1.5%) rotate(1deg);
+    }
+  }
+}
+
+/* Infinite marquee strip (Hanzi → Pinyin pairs) */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 34s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    animation: none;
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en_US" class="dark">
+<html lang="en_US">
 
 <head>
   <meta charset="utf-8" />
@@ -15,7 +15,7 @@
   <meta name="robots" content="index, follow" />
   <meta name="application-name" content="BiangBiang Hanzi" />
   <meta name="apple-mobile-web-app-title" content="BiangBiang Hanzi" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#f5efe3" />
   <link rel="canonical" href="https://biangbianghanzi.app/" />
   <!-- Open Graph -->
   <meta property="og:title" content="BiangBiang Hanzi — Chinese to Pinyin & Cantonese Jyutping Translator & OCR App" />
@@ -37,6 +37,12 @@
     content="Convert Chinese Hanzi to Pinyin (Mandarin) or Jyutping (Cantonese) with tone marks, scan text from photos, and translate Mandarin Chinese instantly on iPhone and Android." />
   <meta name="twitter:image" content="https://biangbianghanzi.app/assets/images/og_preview.jpeg" />
   <meta name="twitter:image:alt" content="BiangBiang Hanzi app preview showing Hanzi to Pinyin conversion" />
+  <!-- Fonts: Sora (body, self-hosted in output.css) + Fraunces & Noto Serif SC (display) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..600&family=Noto+Serif+SC:wght@400;600;900&display=swap"
+    rel="stylesheet" />
   <!-- tailwind -->
   <link href="output.css" rel="stylesheet" />
   <!-- Favicons -->
@@ -76,51 +82,173 @@
 </head>
 
 <body>
-  <main class="min-h-screen  bg-brand">
-
-    <!-- Title -->
-    <div class="flex flex-col gap-4 items-center justify-center">
-      <div>
-        <img src="assets/images/logo.webp" alt="BiangBiang Hanzi app logo" width="300" height="300"
-          class="w-64 h-64 sm:w-32 sm:h-32 mx-auto mb-4" />
-      </div>
-      <h1 class="text-3xl font-bold text-center text-white mb-2">BiangBiang Hanzi</h1>
-      <p class="text-center text-white text-xl mb-6 px-4">
-        The free Chinese to Pinyin and Cantonese Jyutping translator and OCR app for iPhone and Android.
-      </p>
-    </div>
-
-    <!-- Download buttons -->
-    <div class="flex items-center justify-center pb-8">
-      <a href="https://apps.apple.com/app/id6754869174" target="_blank" rel="noopener noreferrer">
-        <img src="assets/images/app_store.svg" alt="Download on the App Store" class="h-20 sm:h-10" />
-      </a>
-      <a href="https://play.google.com/store/apps/details?id=dev.veeso.biangbianghanzi" target="_blank"
-        rel="noopener noreferrer">
-        <img src="assets/images/google_play.svg" alt="Get it on Google Play" class="h-28 sm:h-14" />
+  <!-- ───────────────────────── Header ───────────────────────── -->
+  <header class="site-header sticky top-0 z-50 border-b border-[var(--line)] backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+      <a href="index.html" class="flex items-center gap-3">
+        <img src="assets/images/logo.webp" alt="BiangBiang Hanzi app logo" width="40" height="40"
+          class="h-10 w-10 rounded-xl" />
+        <span class="font-display text-lg font-semibold tracking-tight text-[var(--ink)]">BiangBiang Hanzi</span>
       </a>
     </div>
+  </header>
 
-    <!-- Screenshots -->
-    <div class="grid grid-cols-2 sm:grid-cols-1 items-center justify-around w-full gap-4 p-4 h-fit">
-      <div class="flex items-center justify-center">
+  <main class="overflow-hidden">
+
+    <!-- ───────────────────────── Hero ───────────────────────── -->
+    <section class="relative mx-auto max-w-6xl px-6 pb-20 pt-14 sm:pt-10">
+      <!-- Giant ghost character watermark -->
+      <span aria-hidden="true"
+        class="font-hanzi ghost-drift pointer-events-none absolute -right-8 -top-10 select-none text-[26rem] font-black leading-none text-[var(--brand)] opacity-[0.06] sm:text-[14rem] sm:-right-4">字</span>
+
+      <div class="relative grid grid-cols-2 items-center gap-12 sm:grid-cols-1 sm:gap-8">
+        <!-- Copy -->
         <div>
-          <img src="assets/images/preview.webp" width="1320" height="2868" alt="App Screenshot 1"
-            class="w-auto p-2 h-[720px]" />
+          <p class="eyebrow reveal reveal-d1">汉字 · Pinyin · Jyutping</p>
+          <h1 class="reveal reveal-d2 mt-5 font-display text-[4.2rem] font-black leading-[0.95] tracking-tight text-[var(--ink)] sm:text-[3rem]">
+            Read any<br />Chinese.<br />
+            <span class="text-[var(--brand)]">Instantly.</span>
+          </h1>
+          <p class="reveal reveal-d3 mt-6 max-w-md text-lg leading-relaxed text-[var(--ink-soft)]">
+            The free Chinese-to-Pinyin and Cantonese Jyutping translator and OCR app for
+            iPhone and Android. Type it, paste it, or point your camera at it — get the
+            reading in a tap.
+          </p>
+
+          <!-- Live conversion demo line -->
+          <div class="reveal reveal-d3 mt-7 inline-flex items-center gap-4 paper-card px-5 py-3">
+            <span class="font-hanzi text-3xl font-semibold text-[var(--ink)]">你好</span>
+            <span class="text-2xl text-[var(--brand)]" aria-hidden="true">→</span>
+            <span class="font-display text-2xl italic text-[var(--ink-soft)]">nǐ hǎo</span>
+          </div>
+
+          <!-- Download buttons -->
+          <div id="download" class="reveal reveal-d4 mt-9 flex flex-wrap items-center gap-3">
+            <a href="https://apps.apple.com/app/id6754869174" target="_blank" rel="noopener noreferrer">
+              <img src="assets/images/app_store.svg" alt="Download on the App Store" class="h-14" />
+            </a>
+            <a href="https://play.google.com/store/apps/details?id=dev.veeso.biangbianghanzi" target="_blank"
+              rel="noopener noreferrer">
+              <img src="assets/images/google_play.svg" alt="Get it on Google Play" class="h-14" />
+            </a>
+          </div>
+          <p class="reveal reveal-d5 mt-4 text-sm text-[var(--ink-soft)]">
+            Free · On-device · No account · Native iOS &amp; Android
+          </p>
+        </div>
+
+        <!-- Phone preview -->
+        <div class="reveal reveal-d3 flex justify-center">
+          <div class="device-frame w-[300px] max-w-full sm:w-[230px]">
+            <img src="assets/images/preview.webp" width="1320" height="2868"
+              alt="BiangBiang Hanzi app showing Hanzi converted to Pinyin with tone marks" />
+          </div>
         </div>
       </div>
-      <div class="flex items-center justify-center">
-        <div>
-          <img src="assets/images/camera_ocr.webp" width="1320" height="2868"
-            alt="Live camera OCR scanning Chinese characters and showing Pinyin" class="w-auto p-2 h-[720px]" />
-        </div>
+    </section>
+
+    <!-- ───────────────────── Marquee strip ───────────────────── -->
+    <div class="border-y border-[var(--line)] bg-[var(--paper-2)] py-4">
+      <div class="marquee items-center gap-10 text-xl">
+        <!-- duplicated once for a seamless 50% loop -->
+        <span class="flex shrink-0 items-center gap-10 px-5 text-[var(--ink-soft)]">
+          <span><span class="font-hanzi text-[var(--ink)]">你好</span> nǐhǎo</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">谢谢</span> xièxie</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">汉字</span> hànzì</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">拼音</span> pīnyīn</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">广东话</span> gwong2dung1waa2</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">学习</span> xuéxí</span>
+          <span class="text-[var(--brand)]">·</span>
+        </span>
+        <span class="flex shrink-0 items-center gap-10 px-5 text-[var(--ink-soft)]" aria-hidden="true">
+          <span><span class="font-hanzi text-[var(--ink)]">你好</span> nǐhǎo</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">谢谢</span> xièxie</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">汉字</span> hànzì</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">拼音</span> pīnyīn</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">广东话</span> gwong2dung1waa2</span>
+          <span class="text-[var(--brand)]">·</span>
+          <span><span class="font-hanzi text-[var(--ink)]">学习</span> xuéxí</span>
+          <span class="text-[var(--brand)]">·</span>
+        </span>
       </div>
     </div>
 
-    <!-- SEO content -->
-    <section class="max-w-3xl mx-auto px-6 py-12 text-white">
-      <h2 class="text-2xl font-bold mb-4">Convert Chinese Hanzi to Pinyin or Cantonese Jyutping in seconds</h2>
-      <p class="mb-4">
+    <!-- ───────────────────── Features ───────────────────── -->
+    <section class="mx-auto max-w-6xl px-6 py-20">
+      <p class="eyebrow">What it does</p>
+      <h2 class="mt-4 max-w-2xl font-display text-[2.7rem] font-black leading-[1.05] text-[var(--ink)] sm:text-[1.9rem]">
+        Three ways to make Hanzi readable.
+      </h2>
+
+      <div class="mt-12 grid grid-cols-3 gap-6 sm:grid-cols-1">
+        <div class="paper-card p-7">
+          <span class="seal h-12 w-12 text-2xl font-semibold">音</span>
+          <h3 class="mt-5 font-display text-2xl font-bold text-[var(--ink)]">Pinyin &amp; Jyutping</h3>
+          <p class="mt-3 leading-relaxed text-[var(--ink-soft)]">
+            Convert Hanzi to Mandarin Pinyin (mā má mǎ mà) or Cantonese Jyutping with
+            accurate tone marks. Simplified, Traditional, and Cantonese variants supported.
+          </p>
+        </div>
+        <div class="paper-card p-7">
+          <span class="seal h-12 w-12 text-2xl font-semibold">扫</span>
+          <h3 class="mt-5 font-display text-2xl font-bold text-[var(--ink)]">Live camera OCR</h3>
+          <p class="mt-3 leading-relaxed text-[var(--ink-soft)]">
+            Point your phone at a sign, menu, or book page. The camera reads Chinese in
+            real time and overlays each character with its Pinyin. Works on gallery photos too.
+          </p>
+        </div>
+        <div class="paper-card p-7">
+          <span class="seal h-12 w-12 text-2xl font-semibold">译</span>
+          <h3 class="mt-5 font-display text-2xl font-bold text-[var(--ink)]">On-device translate</h3>
+          <p class="mt-3 leading-relaxed text-[var(--ink-soft)]">
+            Translate Mandarin into your language locally — no internet, no servers, no
+            account. Your text and images never leave the phone.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── Screenshots showcase ───────────────────── -->
+    <section class="relative border-y border-[var(--line)] bg-[var(--paper-2)] py-20">
+      <span aria-hidden="true"
+        class="font-hanzi pointer-events-none absolute -left-10 top-6 select-none text-[18rem] font-black leading-none text-[var(--brand)] opacity-[0.05] sm:hidden">扫</span>
+      <div class="relative mx-auto max-w-6xl px-6">
+        <p class="eyebrow">See it in action</p>
+        <h2 class="mt-4 max-w-2xl font-display text-[2.7rem] font-black leading-[1.05] text-[var(--ink)] sm:text-[1.9rem]">
+          From characters to camera, in one tap.
+        </h2>
+        <div class="mt-12 grid grid-cols-2 items-start justify-items-center gap-10 sm:grid-cols-1">
+          <figure class="flex flex-col items-center">
+            <div class="device-frame w-[280px] max-w-full sm:w-[230px]">
+              <img src="assets/images/preview.webp" width="1320" height="2868"
+                alt="Hanzi to Pinyin conversion screen with tone marks" />
+            </div>
+            <figcaption class="mt-5 text-center text-[var(--ink-soft)]">Type or paste — instant Pinyin.</figcaption>
+          </figure>
+          <figure class="flex flex-col items-center">
+            <div class="device-frame w-[280px] max-w-full sm:w-[230px]">
+              <img src="assets/images/camera_ocr.webp" width="1320" height="2868"
+                alt="Live camera OCR scanning Chinese characters and showing Pinyin" />
+            </div>
+            <figcaption class="mt-5 text-center text-[var(--ink-soft)]">Scan the world around you.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────── SEO content ───────────────────── -->
+    <section class="mx-auto max-w-3xl px-6 py-20 text-[var(--ink)]">
+      <h2 class="font-display text-[1.9rem] font-bold">Convert Chinese Hanzi to Pinyin or Cantonese Jyutping in seconds</h2>
+      <p class="mb-4 mt-4 leading-relaxed text-[var(--ink-soft)]">
         BiangBiang Hanzi is a free, native mobile app that turns Chinese characters (汉字, Hanzi) into
         Pinyin (Mandarin) or Jyutping (Cantonese) with accurate tone marks. Paste or type any Chinese
         text — a poem, a menu, a chat message, a textbook paragraph — and get the romanized
@@ -128,15 +256,15 @@
         Settings. Non-Chinese characters such as Latin letters, numbers, punctuation and emoji are
         preserved in place, so mixed-language text stays readable.
       </p>
-      <p class="mb-4">
+      <p class="mb-4 leading-relaxed text-[var(--ink-soft)]">
         The app is built natively for both platforms: a SwiftUI version for iPhone and iPad, and a
         Jetpack Compose version for Android. There is no shared cross-platform layer, which means
         each app feels at home on its operating system and uses the OS-level translation engines for
         speed and offline support.
       </p>
 
-      <h2 class="text-2xl font-bold mt-10 mb-4">Scan Chinese text with OCR from photos and live camera</h2>
-      <p class="mb-4">
+      <h2 class="mt-12 font-display text-[1.9rem] font-bold">Scan Chinese text with OCR from photos and live camera</h2>
+      <p class="mb-4 mt-4 leading-relaxed text-[var(--ink-soft)]">
         Point your phone at a Chinese sign, restaurant menu, book page or product label and BiangBiang
         Hanzi will read the characters for you. The OCR engine — Apple Vision on iOS and Google ML Kit
         on Android — recognizes Simplified and Traditional Chinese in real time from the camera feed,
@@ -144,8 +272,8 @@
         Pinyin reading, making it easy to study, pronounce, or look up unfamiliar Hanzi on the spot.
       </p>
 
-      <h2 class="text-2xl font-bold mt-10 mb-4">Translate Mandarin Chinese to your language</h2>
-      <p class="mb-4">
+      <h2 class="mt-12 font-display text-[1.9rem] font-bold">Translate Mandarin Chinese to your language</h2>
+      <p class="mb-4 mt-4 leading-relaxed text-[var(--ink-soft)]">
         Beyond pronunciation, BiangBiang Hanzi can translate Mandarin Chinese text into your
         preferred language using on-device translation: the iOS Translation framework on iPhone and
         Google ML Kit Translate on Android. Translations run locally once the language pack is
@@ -154,8 +282,8 @@
         provides Jyutping romanization without translation.
       </p>
 
-      <h2 class="text-2xl font-bold mt-10 mb-4">Who is it for?</h2>
-      <ul class="list-disc list-inside mb-4 space-y-2">
+      <h2 class="mt-12 font-display text-[1.9rem] font-bold">Who is it for?</h2>
+      <ul class="mb-4 mt-4 list-disc list-inside space-y-2 text-[var(--ink-soft)] marker:text-[var(--brand)]">
         <li>Mandarin Chinese learners who need quick Pinyin readings while studying.</li>
         <li>Cantonese learners who want Jyutping romanization for Hanzi.</li>
         <li>Travelers in China, Taiwan, Hong Kong, Singapore or Malaysia who need to read signs and menus.</li>
@@ -163,8 +291,8 @@
         <li>Anyone who receives Chinese messages, documents or photos and wants to understand them.</li>
       </ul>
 
-      <h2 class="text-2xl font-bold mt-10 mb-4">Key features</h2>
-      <ul class="list-disc list-inside mb-4 space-y-2">
+      <h2 class="mt-12 font-display text-[1.9rem] font-bold">Key features</h2>
+      <ul class="mb-4 mt-4 list-disc list-inside space-y-2 text-[var(--ink-soft)] marker:text-[var(--brand)]">
         <li>Hanzi to Pinyin conversion with tone marks (mā, má, mǎ, mà, ma).</li>
         <li>Hanzi to Cantonese Jyutping conversion (e.g. nei5 hou2 for 你好).</li>
         <li>Support for Simplified, Traditional, and Cantonese variants.</li>
@@ -175,53 +303,53 @@
         <li>Native iOS (SwiftUI) and Android (Jetpack Compose) apps.</li>
       </ul>
 
-      <h2 class="text-2xl font-bold mt-10 mb-4">Why it is called BiangBiang Hanzi</h2>
-      <p class="mb-4">
+      <h2 class="mt-12 font-display text-[1.9rem] font-bold">Why it is called BiangBiang Hanzi</h2>
+      <p class="mb-4 mt-4 leading-relaxed text-[var(--ink-soft)]">
         The app is named after <em>biáng</em> (𰻝), one of the most complex Chinese characters in
         existence — used to write the name of <em>biángbiáng noodles</em> (𰻝𰻝面), a famous dish
         from Shaanxi province. It is a fitting mascot for an app that takes complicated Hanzi and
         makes them easy to read.
       </p>
+
+      <!-- Final CTA -->
+      <div class="mt-12 flex flex-wrap items-center gap-3">
+        <a href="https://apps.apple.com/app/id6754869174" target="_blank" rel="noopener noreferrer">
+          <img src="assets/images/app_store.svg" alt="Download on the App Store" class="h-14" />
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=dev.veeso.biangbianghanzi" target="_blank"
+          rel="noopener noreferrer">
+          <img src="assets/images/google_play.svg" alt="Get it on Google Play" class="h-14" />
+        </a>
+      </div>
     </section>
   </main>
-  <footer class="bg-brand pt-16 pb-2 px-20 sm:px-4">
-    <div class="flex flex-col gap-8 items-center">
-      <div class="flex sm:flex-col sm:items-start items-center justify-between gap-8 w-full">
+
+  <!-- ───────────────────────── Footer ───────────────────────── -->
+  <footer class="border-t border-[var(--line)] bg-[var(--paper-2)] px-6 pb-8 pt-16">
+    <div class="mx-auto flex max-w-6xl flex-col gap-10">
+      <div class="flex items-start justify-between gap-8 sm:flex-col">
+        <div class="flex items-center gap-3">
+          <img src="assets/images/logo.webp" alt="BiangBiang Hanzi app logo" width="40" height="40"
+            class="h-10 w-10 rounded-xl" />
+          <span class="font-display text-lg font-semibold text-[var(--ink)]">BiangBiang Hanzi</span>
+        </div>
         <!-- Links -->
-        <div class="flex flex-col gap-4">
-          <div>
-            <a href="index.html" class="text-white underline">Home</a>
-          </div>
-          <div>
-            <a href="privacy.html" class="text-white underline">Privacy Policy</a>
-          </div>
-          <div>
-            <a href="https://github.com/veeso/BiangBiang-Hanzi" class="text-white underline">Github</a>
-          </div>
+        <div class="flex flex-col gap-3">
+          <a href="index.html" class="text-[var(--ink-soft)] hover:text-[var(--brand)]">Home</a>
+          <a href="privacy.html" class="text-[var(--ink-soft)] hover:text-[var(--brand)]">Privacy Policy</a>
+          <a href="https://github.com/veeso/BiangBiang-Hanzi" class="text-[var(--ink-soft)] hover:text-[var(--brand)]">Github</a>
         </div>
         <!-- Legal -->
-        <div class="flex flex-col gap-4">
-          <div>
-            <span class="text-white">Christian Visintin</span>
-          </div>
-          <div>
-            <a href="mailto:info@veeso.dev" class="text-white underline">info@veeso.dev</a>
-          </div>
-          <div>
-            <span class="text-white">Via Marangoni 33, 33100, Udine, Italy</span>
-          </div>
-          <div>
-            <span class="text-white">IT03104140300</span>
-          </div>
+        <div class="flex flex-col gap-3 text-[var(--ink-soft)]">
+          <span>Christian Visintin</span>
+          <a href="mailto:info@veeso.dev" class="hover:text-[var(--brand)]">info@veeso.dev</a>
+          <span>Via Marangoni 33, 33100, Udine, Italy</span>
+          <span>IT03104140300</span>
         </div>
       </div>
-      <div class="flex flex-col items-center">
-        <div>
-          <span class="text-white text-xs">Copyright © <span id="copyright-year">2026</span> Christian Visintin</span>
-        </div>
-        <div>
-          <span class="text-white text-xs">Google Play and the Google Play logo are trademarks of Google LLC.</span>
-        </div>
+      <div class="flex flex-col items-center gap-1 border-t border-[var(--line)] pt-6 text-center">
+        <span class="text-xs text-[var(--ink-soft)]">Copyright © <span id="copyright-year">2026</span> Christian Visintin</span>
+        <span class="text-xs text-[var(--ink-soft)]">Google Play and the Google Play logo are trademarks of Google LLC.</span>
       </div>
     </div>
   </footer>
