@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-biangbiangui = "v0.3.3"
+biangbiangui = "v0.4.0"
 cameraCore = "1.6.1"
 datastorePreferences = "1.2.1"
 kotlin = "2.3.21"
@@ -56,4 +56,3 @@ translate = { module = "com.google.mlkit:translate", version.ref = "translate" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
