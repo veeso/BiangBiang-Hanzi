@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 - [Changelog](#changelog)
+  - [0.5.2](#052)
   - [0.5.1](#051)
   - [0.5.0](#050)
   - [0.4.0](#040)
@@ -10,6 +11,12 @@ All notable changes to this project will be documented in this file.
   - [0.3.0](#030)
   - [0.2.0](#020)
   - [0.1.1](#011)
+
+## 0.5.2
+
+Released on 24/08/2026
+
+- add translation support for Cantonese using zh-CN. Works fine as a workaround until Android supports Cantonese translations natively
 
 ## 0.5.1
 
