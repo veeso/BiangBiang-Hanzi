@@ -34,21 +34,21 @@ enum ChineseConfig {
                         displayName: "Simplified",
                         transliterator: PinyinTransliterator(),
                         ttsLanguageCode: "zh-CN",
-                        translatable: true
+                        translationLanguageCode: "zh-CN"
                     ),
                     LanguageVariant(
                         id: "traditional",
                         displayName: "Traditional",
                         transliterator: PinyinTransliterator(),
                         ttsLanguageCode: "zh-CN",
-                        translatable: true
+                        translationLanguageCode: "zh-CN"
                     ),
                     LanguageVariant(
                         id: "cantonese",
                         displayName: "Cantonese",
                         transliterator: JyutpingTransliterator(),
                         ttsLanguageCode: "zh-HK",
-                        translatable: false
+                        translationLanguageCode: "zh-CN"
                     ),
                 ]
             ),
