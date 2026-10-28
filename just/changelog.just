@@ -9,7 +9,7 @@ changelog version:
   git-cliff --config cliff.toml --tag "v{{ version }}" --output CHANGELOG.md
   git-cliff --config cliff.toml --tag "v{{ version }}" --include-path "ios/**" --output ios/CHANGELOG.md
   git-cliff --config cliff.toml --tag "v{{ version }}" --include-path "android/**" --output android/CHANGELOG.md
-  just fmt CHANGELOG.md ios/CHANGELOG.md android/CHANGELOG.md
+  just fmt "CHANGELOG.md ios/CHANGELOG.md android/CHANGELOG.md"
 
 # Tag a version and create a GitHub release with the global (not per-platform) changelog section as notes.
 [group('changelog')]

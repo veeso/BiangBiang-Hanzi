@@ -1,102 +1,211 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
 
-- [Changelog](#changelog)
-  - [0.5.2](#052)
-  - [0.5.1](#051)
-  - [0.5.0](#050)
-  - [0.4.0](#040)
-  - [0.3.1](#031)
-  - [0.3.0](#030)
-  - [0.2.0](#020)
-  - [0.1.3](#013)
-  - [0.1.2](#012)
-  - [0.1.1](#011)
+## 0.5.3
+
+Released on 2026-10-28
+
+### Fixed
+
+- **ios:** bump BiangBiangUI to 0.5.0 for camera wide layout and log
+
+> BiangBiangUI 0.5 adds a wide split layout to the camera screen on wide
+> built-in displays, with a session log pane next to the preview. The log
+> keeps a bounded history of recognised text and preserves the physical
+> pane order and the existing camera controls. It also corrects the OCR
+> overlay alignment in landscape.
+>
+> Release the app as 0.5.3 (build 53).
+
+### Build
+
+- **ios:** bump BiangBiangUI to 0.5.1
 
 ## 0.5.2
 
-Released on 24/08/2026
+Released on 2026-08-24
 
-- add translation support for Cantonese using zh-CN. Works fine as a workaround until iOS supports Cantonese translations natively
+### Fixed
+
+- **ios:** add translation support for Cantonese using zh-CN. Works fine as a workaround until iOS supports Cantonese translations natively
 
 ## 0.5.1
 
-Released on 19/05/2026
+Released on 2026-05-18
 
-- Updated app icon with iOS 26 style
+### Added
 
-## 0.5.0
+- **ios:** add audio playback for Hanzi text
 
-Released on 18/05/2026
+> Add AudioPlayerService using AVSpeechSynthesizer with Mandarin/Cantonese
+> voice selection wired to the Chinese variant setting. Add play/stop
+> control to text mode. Bump version to 0.5.0 (build 50).
 
-- Added audio playback for Hanzi text:
-  - New `AudioPlayerService` built on `AVSpeechSynthesizer` with Mandarin/Cantonese voice selection wired to the Chinese variant setting.
-  - Listen/Stop control in text mode.
-- Added a History feature:
-  - New History tab listing explicitly-saved Hanzi entries, backed by a pure `HistoryStore` (prepend, consecutive dedup by original + variant, silent 500-entry cap, delete, clear) persisted via `UserDefaults`.
-  - Ephemeral Original/Transliterated toggle, expand/collapse rows, per-entry play/stop TTS, swipe-delete, Clear All and an empty state.
-  - Save button in the Text tab and long-press on an OCR box (tap still copies), each with a confirmation toast.
-- Added a rate-the-app prompt: a custom dialog shown on cold launch after 3+ launches that gates the App Store write-review flow, with cap and dismiss-forever logic.
-- Migrated the entire UI layer to the shared **BiangBiangUI** Swift package, replacing the local SwiftUI views, camera, `TextProcessor`, history, settings and review-prompt code with `Config` and transliterator wrappers.
-- Added CI: SwiftFormat lint plus `xcodebuild` build and test on macOS.
+- **ios:** add History feature
+
+> New History tab listing explicitly-saved Hanzi entries.
+>
+> - HistoryEntry model + pure HistoryStore (prepend, consecutive
+>   dedup by original+variant, silent 500 cap, delete, clear)
+> - Persist in AppSettings via UserDefaults (Codable JSON)
+> - History tab: ephemeral Original/Transliterated toggle,
+>   expand/collapse rows, per-entry play/stop TTS (speaks stored
+>   Hanzi with stored variant voice), swipe-delete, Clear All,
+>   empty state
+> - Save button in Text tab with confirmation toast
+> - Long-press OCR box saves (tap still copies) + caption and
+>   "Saved to History" toast
+> - Swift Testing: dedup, cap eviction, persistence round-trip
+
+- **ios:** add rate-the-app popup after 3+ launches
+
+> Custom 3-button dialog gating the App Store write-review flow,
+> shown on cold launch when launchCount >= 3 and not dismissed.
+>
+> - ReviewPromptPolicy: pure show/cap decision logic + tests
+> - AppSettings: reviewLaunchCount (cap 5), reviewPromptDismissed,
+>   registerLaunch/notNow/dismissForever + persistence tests
+> - App registers a launch once per process at init
+> - ContentView presents the alert; Rate now opens the write-review
+>   URL via openURL (reliable vs StoreKit requestReview)
+> - DEBUG-only reset row in Settings with confirmation toast
+
+### Changed
+
+- **ios:** migrate to BiangBiangUI
+
+> Replace local SwiftUI views, camera, TextProcessor, history, settings
+> and review-prompt code with the shared BiangBiangUI Swift package.
+> Add Config and PinyinTransliterator/JyutpingTransliterator wrappers
+> plus transliterator parity tests. Bump BiangBiangUI to 0.1.3.
+
+### Fixed
+
+- **ios:** commit SwiftPM Package.resolved for Xcode Cloud
+
+> Xcode Cloud disables automatic dependency resolution and requires a
+> checked-in Package.resolved. The .gitignore '*.xcworkspace' rule
+> excluded the whole workspace dir, so the file was never tracked and the
+> Archive build failed resolving the 'biangbiangui' dependency.
+>
+> Re-include the swiftpm/Package.resolved path while keeping the rest of
+> the workspace ignored.
+
+### Build
+
+- **deps:** bump BiangBiangUI to 0.2.0 on both apps
+
+> Document in CLAUDE.md that the entire UI layer of both iOS and
+> Android apps depends on the shared BiangBiangUI library.
 
 ## 0.4.0
 
-Released on 09/05/2026
+Released on 2026-05-09
 
-- Added Cantonese support:
-  - New `JyutpingDictionary` backed by a bundled `cantonese.json` generated from the Unihan `kCantonese` field.
-  - `TextProcessor` gains a `.cantonese` mode that romanizes Hanzi to Jyutping.
-  - Settings expose a "Cantonese" Chinese variant; text mode swaps the "Pinyin" header for "Jyutping", disables the translation language picker and hides the translation section since the Apple Translation API does not support Cantonese.
-- Added a setting to dismiss the keyboard automatically when typing Hanzi on the home tab.
-- Camera: configure the `AVCaptureSession` once at startup and only start/stop it on tab switch, removing the visible reconfiguration delay when returning to the camera tab.
+### Added
+
+- **ios:** add JyutpingDictionary with bundled cantonese.json
+- **ios:** add Cantonese mode to TextProcessor
+- **ios:** add Cantonese variant to settings and text mode UI
+
+### Fixed
+
+- **ios:** configure capture session once, only start/stop on tab switch
+- **ios:** add toggle for closing keyboard when typing hanzi in homepage
 
 ## 0.3.1
 
-Released on 06/05/2026
+Released on 2026-05-06
 
-- Modernized the SwiftUI codebase to iOS 17+ patterns:
-  - Migrated state from `ObservableObject` / `@Published` / `@StateObject` to `@Observable` + `@State` + `@Environment`.
-  - Replaced `NavigationView` with `NavigationStack` and switched the tab bar to the iOS 17 `Tab` API with an enum-typed selection.
-  - Replaced `MagnificationGesture`, `foregroundColor`, `cornerRadius` and `UIImpactFeedbackGenerator` with `MagnifyGesture`, `foregroundStyle`, `clipShape(.rect(...))` and `sensoryFeedback`.
-  - Replaced Combine `debounce` and `DispatchQueue.asyncAfter` with cancellable `Task` + `Task.sleep`.
-- Camera view polish:
-  - Split into dedicated `CameraPermissionView`, `CameraLiveView`, `RecognizedTextOverlay` and `CopyToast` views.
-  - Added a `ContentUnavailableView`-based permission screen with a deep link into Settings.
-- Text view polish:
-  - Replaced the read-only `TextEditor` with a `Text`-based `ReadOnlyTextBox` and switched the Hanzi input to `TextField(axis: .vertical)`.
-- Added a shared `AppDesign` enum with spacing, corner radii, animation durations and tap target constants used across views.
-- Fixed OCR overlays on gallery and captured photos rendering at the wrong size and position by mapping Vision's normalized box onto the displayed image's aspect-fit rect and passing the image orientation to the Vision request.
+### Changed
+
+- **ios:** modernize SwiftUI to iOS 17+ patterns
+
+> Migrate the iOS app interface to current SwiftUI APIs and fix design
+> issues found during the SwiftUI Pro review.
+>
+> State and lifecycle:
+>
+> - Replace ObservableObject/@Published/@StateObject with @Observable +
+>   @State + @Environment for AppSettings and CameraModel.
+> - Drop deprecated NavigationView in favor of NavigationStack.
+> - Switch TabView to the iOS 17 Tab API with an enum-typed selection.
+>
+> Views and modifiers:
+>
+> - Split CameraModeView into CameraPermissionView, CameraLiveView,
+>   RecognizedTextOverlay and CopyToast files.
+> - Extract SectionView into its own file.
+> - Replace TextEditor read-only misuse with a Text-based ReadOnlyTextBox
+>   and use TextField(axis: .vertical) for Hanzi input.
+> - Use ContentUnavailableView for the camera permission screen with a
+>   deep link into Settings.
+> - Replace Combine debounce and DispatchQueue.asyncAfter with
+>   cancellable Task + Task.sleep.
+> - Replace MagnificationGesture with MagnifyGesture, foregroundColor
+>   with foregroundStyle, cornerRadius with clipShape(.rect(...)),
+>   UIImpactFeedbackGenerator with sensoryFeedback.
+> - Use openURL environment instead of UIApplication.shared.open in
+>   SettingsView.
+> - Move animation modifiers to the outer view so the whole control
+>   animates rather than just its background.
+
+### Fixed
+
+- **ios:** align OCR overlays on gallery and captured photos
+
+> The recognized-text pill was sized and positioned using the camera
+> preview layer's coordinate space, which does not match the displayed
+> photo's aspect-fit rect — gallery images rendered overlays at huge,
+> misplaced sizes. Map Vision's normalized box onto the displayed image
+> rect when a captured image is present, and pass the UIImage's
+> orientation to the Vision request so the box lives in upright space.
 
 ## 0.3.0
 
-Released on 02/05/2026
+Released on 2026-05-02
 
-- [Issue 13](https://github.com/veeso/BiangBiang-Hanzi/issues/13): Camera controls. Pinch-to-zoom and 1x/2x/5x preset buttons in the camera view, with automatic lens switching on devices with multiple back cameras (triple/dual).
+### Added
+
+- **ios:** add pure CameraZoom helpers with tests
+- **ios:** switch CameraModel to virtual device + zoom state
+- **ios:** pinch-to-zoom and 1x/2x/5x preset buttons in camera
+
+### Fixed
+
+- **ios:** preset button touch target 44pt, accessibilityLabel on Button
+- **ios:** restore autoFocusRangeRestriction near for close-up text
+- **ios:** re-apply initial zoom after session start
+- **ios:** translate bug email button label to English
+- build number 30 for 0.3.0
+
+### Style
+
+- format ios code
 
 ## 0.2.0
 
-Released on 03/01/2026
+Released on 2026-01-03
 
-- [Issue 10](https://github.com/veeso/BiangBiang-Hanzi/issues/10): Do not strip non hanzi characters from sentence that contains hanzi. For instance `我在NASA工作. 现在是5点.` caused converted text to be just `wǒ zài gōng zuò. xiàn zài shì diǎn.` instead of `wǒ zài NASA gōng zuò. xiàn zài shì 5 diǎn.`.
-- [Issue 9](https://github.com/veeso/BiangBiang-Hanzi/issues/9): Added tab to file issues from within the app.
+### Added
 
-## 0.1.3
+- Added bug reports in settings view (#12)
 
-Released on 16/11/2025
+### Changed
 
-- [Issue 2](https://github.com/veeso/BiangBiang-Hanzi/issues/2): Fixed camera not auto-focusing when moving closer to text.
-- [Issue 4](https://github.com/veeso/BiangBiang-Hanzi/issues/4): Better feedback for copying text to clipboard from text overlays.
+- ios folder
 
-## 0.1.2
+### Fixed
 
-Released on 07/11/2025
+- **ios:** Ipad view
+- **ios:** OCR text overlay position
+- **ios:** Fixed camera not auto-focusing when moving closer to text. (#5)
+- **ios:** Better feedback for copying text to clipboard from text overlays (#6)
+- **ios:** 0.1.3
+- **ios:** Do not strip non hanzi characters from sentence that contains hanzi
 
-- Fixed OCR box position
+> For instance `我在NASA工作` caused converted text to be just `wǒ zài gōng zuò. xiàn zài shì diǎn.` instead of `wǒ zài NASA gōng zuò. xiàn zài shì 5 diǎn.`.
 
-## 0.1.1
-
-Released on 05/11/2025
-
-- First stable release of the iOS application.
+- **android:** Do not strip non hanzi characters from sentence that contains hanzi.
+- typo
