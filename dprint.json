@@ -1,0 +1,46 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "indentWidth": 2,
+  "lineWidth": 80,
+  "newLineKind": "lf",
+  "markdown": {
+    "textWrap": "maintain"
+  },
+  "json": {},
+  "toml": {},
+  "yaml": {},
+  "exec": {
+    "cwd": "${configDir}",
+    "commands": [
+      {
+        "command": "swiftformat stdin --stdinpath {{file_path}}",
+        "exts": ["swift"]
+      }
+    ]
+  },
+  "excludes": [
+    ".agents",
+    "**/.build",
+    "**/.gradle",
+    "**/.kotlin",
+    "**/.swiftpm",
+    "**/DerivedData",
+    "android/build",
+    "android/**/build",
+    ".claude",
+    ".superpowers",
+    "docs/superpowers",
+    "site/output.css",
+    "skills-lock.json",
+    "**/cantonese.json",
+    "**/*.xcassets",
+    "ios/**/xcshareddata"
+  ],
+  "plugins": [
+    "npm:@dprint/markdown@0.28.2@ae9769b71d1af2983927aa8b7657e45a571f2e9c7037a5c494654fd94438252d",
+    "npm:@dprint/json@0.25.2",
+    "npm:@dprint/toml@0.9.0@2cac97483311ab7e36373e02592b9757f9619f6aa2f7e232bb0a6bd143a75caa",
+    "npm:dprint-plugin-yaml@0.6.0@aee3873f443c9f749521ea171cd38ed381491123aa4530684dd0d6e3deb6727b",
+    "npm:@dprint/exec@0.8.0/plugin.json@9d6234ea05810c775f388c2a4cce82b9116b69294b65e0e1e9d64f1446283ef3"
+  ]
+}
