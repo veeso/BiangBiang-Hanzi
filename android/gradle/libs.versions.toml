@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-biangbiangui = "v0.5.0"
+biangbiangui = "v0.5.1"
 cameraCore = "1.6.1"
 datastorePreferences = "1.2.1"
 kotlin = "2.3.21"
