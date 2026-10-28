@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/veeso/BiangBiangUI",
       "state" : {
-        "revision" : "cefc0eb53eaa3161b2b3eef8daf8cd42caf7ea8e",
-        "version" : "0.4.0"
+        "revision" : "5dfbfa841be5956329654802b2fd595c57916a08",
+        "version" : "0.5.0"
       }
     }
   ],
